@@ -1,27 +1,82 @@
-#container {
-  text-align: center;
-
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.page-shell {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+ion-card {
+  margin: 0;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(16, 24, 40, 0.08);
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
-  color: #8c8c8c;
-
+.status-label,
+.detail-label {
+  color: var(--ion-color-medium);
+  font-size: 0.85rem;
   margin: 0;
 }
 
-#container a {
-  text-decoration: none;
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.detail-value {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.log-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-state {
+  --min-height: 72px;
+}
+
+ion-chip.state-connected,
+ion-chip.state-subscribed {
+  --background: rgba(var(--ion-color-success-rgb), 0.14);
+  --color: var(--ion-color-success-shade);
+}
+
+ion-chip.state-connecting {
+  --background: rgba(var(--ion-color-warning-rgb), 0.16);
+  --color: var(--ion-color-warning-shade);
+}
+
+ion-chip.state-error {
+  --background: rgba(var(--ion-color-danger-rgb), 0.16);
+  --color: var(--ion-color-danger-shade);
+}
+
+ion-chip.state-disconnected {
+  --background: rgba(var(--ion-color-medium-rgb), 0.16);
+  --color: var(--ion-color-medium-shade);
+}
+
+@media (max-width: 480px) {
+  .actions {
+    grid-template-columns: 1fr;
+  }
 }

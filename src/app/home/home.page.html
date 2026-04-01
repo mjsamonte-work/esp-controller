@@ -1,20 +1,96 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
+    <ion-title>LED Controller</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
+      <ion-title size="large">LED Controller</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+  <div class="page-shell">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-subtitle>HiveMQ Cloud</ion-card-subtitle>
+        <ion-card-title>MQTT Connection</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="status-row">
+          <span class="status-label">Connection</span>
+          <ion-chip [ngClass]="'state-' + (connectionState$ | async)">
+            {{ connectionState$ | async }}
+          </ion-chip>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Subscribed</span>
+          <ion-chip [ngClass]="(subscribed$ | async) ? 'state-subscribed' : 'state-disconnected'">
+            {{ (subscribed$ | async) ? 'yes' : 'no' }}
+          </ion-chip>
+        </div>
+        <div class="detail-grid">
+          <div>
+            <p class="detail-label">Broker</p>
+            <p class="detail-value">{{ brokerHost }}</p>
+          </div>
+          <div>
+            <p class="detail-label">TLS Port</p>
+            <p class="detail-value">{{ brokerPort }}</p>
+          </div>
+          <div>
+            <p class="detail-label">Publish Topic</p>
+            <p class="detail-value">{{ publishTopic }}</p>
+          </div>
+          <div>
+            <p class="detail-label">Subscribe Topic</p>
+            <p class="detail-value">{{ subscribeTopic }}</p>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Power Controls</ion-card-title>
+        <ion-card-subtitle>Send LED commands</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="actions">
+          <ion-button color="success" expand="block" size="large" (click)="sendState('ON')">
+            ON
+          </ion-button>
+          <ion-button color="danger" expand="block" size="large" (click)="sendState('OFF')">
+            OFF
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Activity Log</ion-card-title>
+        <ion-card-subtitle>Subscribed messages and local MQTT events</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list lines="full" *ngIf="logs$ | async as logs">
+          <ion-item *ngIf="!logs.length" class="empty-state">
+            <ion-label>No MQTT activity yet. Logs will appear here after connect, publish, or subscribe events.</ion-label>
+          </ion-item>
+
+          <ion-item *ngFor="let log of logs">
+            <ion-label>
+              <div class="log-meta">
+                <strong>{{ log.message }}</strong>
+                <ion-note>{{ log.timestamp | date:'mediumTime' }}</ion-note>
+              </div>
+              <p>{{ log.direction | uppercase }}<span *ngIf="log.topic"> • {{ log.topic }}</span></p>
+              <p *ngIf="log.payload">{{ log.payload }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
   </div>
 </ion-content>
