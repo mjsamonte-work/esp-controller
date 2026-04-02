@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">DC Controller</string>
-    <string name="title_activity_main">DC Controller</string>
+    <string name="app_name">Easy Remote</string>
+    <string name="title_activity_main">Easy Remote</string>
     <string name="package_name">com.dccontroller.app</string>
     <string name="custom_url_scheme">com.dccontroller.app</string>
 </resources>

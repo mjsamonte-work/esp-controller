@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.dccontroller.app',
-  appName: 'DC Controller',
+  appName: 'Easy Remote',
   webDir: 'www'
 };
 
