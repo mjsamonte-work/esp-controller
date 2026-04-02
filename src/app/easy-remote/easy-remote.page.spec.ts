@@ -53,6 +53,8 @@ describe('EasyRemotePage', () => {
     const onButton = buttons[0] as HTMLIonButtonElement;
 
     onButton.click();
+    fixture.detectChanges();
+    await component.confirmStateChange();
     await fixture.whenStable();
 
     expect(mqttService.publishState).toHaveBeenCalledWith('ON');
@@ -79,6 +81,8 @@ describe('EasyRemotePage', () => {
     const onButton = fixture.nativeElement.querySelectorAll('ion-button')[0] as HTMLIonButtonElement;
     onButton.click();
     fixture.detectChanges();
+    await component.confirmStateChange();
+    fixture.detectChanges();
 
     expect(component.isSubmitting).toBeTrue();
     expect(component.submittingState).toBe('ON');
@@ -93,5 +97,23 @@ describe('EasyRemotePage', () => {
     expect(component.toastOpen).toBeTrue();
     expect(component.toastColor).toBe('success');
     expect(component.toastMessage).toContain('completed');
+  });
+
+  it('opens a confirmation alert before publishing', () => {
+    component.requestStateChange('OFF');
+
+    expect(component.confirmAlertOpen).toBeTrue();
+    expect(component.pendingState).toBe('OFF');
+    expect(component.confirmHeader).toBe('Confirm Turn Off');
+    expect(component.confirmMessage).toContain('turn the remote off');
+  });
+
+  it('does not publish when the user cancels the confirmation', () => {
+    component.requestStateChange('ON');
+    component.cancelStateChange();
+
+    expect(component.confirmAlertOpen).toBeFalse();
+    expect(component.pendingState).toBeNull();
+    expect(mqttService.publishState).not.toHaveBeenCalled();
   });
 });

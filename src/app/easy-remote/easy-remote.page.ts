@@ -4,6 +4,7 @@ import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
 import { RouterLink } from '@angular/router';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonHeader,
@@ -31,6 +32,7 @@ import { MqttService } from '../services/mqtt.service';
     NgFor,
     NgIf,
     UpperCasePipe,
+    IonAlert,
     IonButton,
     IonContent,
     IonHeader,
@@ -49,8 +51,22 @@ import { MqttService } from '../services/mqtt.service';
 export class EasyRemotePage {
   readonly connectionState$ = this.mqttService.state$;
   readonly logs$ = this.mqttService.logs$;
+  readonly confirmButtons = [
+    {
+      text: 'Cancel',
+      role: 'cancel',
+      handler: () => this.cancelStateChange(),
+    },
+    {
+      text: 'Confirm',
+      role: 'confirm',
+      handler: () => void this.confirmStateChange(),
+    },
+  ];
   isSubmitting = false;
   submittingState: 'ON' | 'OFF' | null = null;
+  confirmAlertOpen = false;
+  pendingState: 'ON' | 'OFF' | null = null;
   toastOpen = false;
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
@@ -59,6 +75,31 @@ export class EasyRemotePage {
     addIcons({
       'chevron-back-outline': chevronBackOutline,
     });
+  }
+
+  requestStateChange(state: 'ON' | 'OFF'): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
+    this.pendingState = state;
+    this.confirmAlertOpen = true;
+  }
+
+  cancelStateChange(): void {
+    this.confirmAlertOpen = false;
+    this.pendingState = null;
+  }
+
+  async confirmStateChange(): Promise<void> {
+    if (!this.pendingState) {
+      return;
+    }
+
+    const state = this.pendingState;
+    this.confirmAlertOpen = false;
+    this.pendingState = null;
+    await this.sendState(state);
   }
 
   async sendState(state: 'ON' | 'OFF'): Promise<void> {
@@ -83,6 +124,16 @@ export class EasyRemotePage {
 
   closeToast(): void {
     this.toastOpen = false;
+  }
+
+  get confirmHeader(): string {
+    return this.pendingState === 'ON' ? 'Confirm Turn On' : 'Confirm Turn Off';
+  }
+
+  get confirmMessage(): string {
+    return this.pendingState === 'ON'
+      ? 'Are you sure you want to turn the remote on?'
+      : 'Are you sure you want to turn the remote off?';
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {
