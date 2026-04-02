@@ -19,19 +19,16 @@ ion-content {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 20px;
 }
 
 .hero-logo {
-  width: min(42vw, 180px);
+  width: min(56vw, 260px);
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(16px, 4vw, 24px);
-  border-radius: 36px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 24px 48px var(--splash-shadow);
+  padding: 0;
 }
 
 .hero-logo img {
@@ -44,12 +41,12 @@ ion-content {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.2rem, 1vw, 0.45rem);
+  gap: clamp(0.12rem, 0.75vw, 0.3rem);
   color: var(--splash-blue);
   font-size: clamp(2rem, 8vw, 3.6rem);
   font-weight: 800;
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
+  letter-spacing: 0.1em;
+  text-indent: 0.1em;
   text-transform: uppercase;
 }
 
@@ -60,31 +57,29 @@ ion-content {
 }
 
 .wordmark-logo {
-  width: clamp(1.9rem, 7vw, 3.4rem);
-  height: clamp(1.9rem, 7vw, 3.4rem);
-  margin-inline: clamp(0.05rem, 0.3vw, 0.18rem);
-  transform: translateY(2%);
+  width: 1.04em;
+  height: 1.04em;
+  margin-inline: 0.02em;
+  transform: translateY(0.015em);
 }
 
 .wordmark-logo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(13, 87, 184, 0.14));
 }
 
 @media (max-width: 480px) {
   .splash-shell {
-    gap: 24px;
+    gap: 16px;
   }
 
   .hero-logo {
-    width: min(48vw, 160px);
-    border-radius: 30px;
+    width: min(64vw, 220px);
   }
 
   .remote-wordmark {
-    letter-spacing: 0.14em;
-    text-indent: 0.14em;
+    letter-spacing: 0.08em;
+    text-indent: 0.08em;
   }
 }
