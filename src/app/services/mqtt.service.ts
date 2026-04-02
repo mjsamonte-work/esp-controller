@@ -84,7 +84,7 @@ export class MqttService implements OnDestroy {
     this.client?.end(true);
   }
 
-  publishState(state: 'ON' | 'OFF'): void {
+  publishState(state: 'ON' | 'OFF'): Promise<void> {
     if (!this.client) {
       this.stateSubject.next('error');
       this.addLog({
@@ -93,28 +93,32 @@ export class MqttService implements OnDestroy {
         payload: 'MQTT client is unavailable',
         topic: this.publishTopic,
       });
-      return;
+      return Promise.reject(new Error('MQTT client is unavailable'));
     }
 
     const payload = JSON.stringify({ state });
 
-    this.client.publish(this.publishTopic, payload, { qos: 0 }, (error?: Error) => {
-      if (error) {
-        this.stateSubject.next('error');
+    return new Promise<void>((resolve, reject) => {
+      this.client?.publish(this.publishTopic, payload, { qos: 0 }, (error?: Error) => {
+        if (error) {
+          this.stateSubject.next('error');
+          this.addLog({
+            direction: 'error',
+            message: `Failed to publish ${state} command`,
+            payload: error.message,
+            topic: this.publishTopic,
+          });
+          reject(error);
+          return;
+        }
+
         this.addLog({
-          direction: 'error',
-          message: `Failed to publish ${state} command`,
-          payload: error.message,
+          direction: 'sent',
+          message: `${state} command sent`,
+          payload,
           topic: this.publishTopic,
         });
-        return;
-      }
-
-      this.addLog({
-        direction: 'sent',
-        message: `${state} command sent`,
-        payload,
-        topic: this.publishTopic,
+        resolve();
       });
     });
   }

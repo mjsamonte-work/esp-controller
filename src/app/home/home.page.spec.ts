@@ -1,40 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { provideRouter } from '@angular/router';
 
 import { HomePage } from './home.page';
-import { MqttService } from '../services/mqtt.service';
 
 describe('HomePage', () => {
   let component: HomePage;
   let fixture: ComponentFixture<HomePage>;
-  let mqttService: jasmine.SpyObj<MqttService>;
 
   beforeEach(async () => {
-    mqttService = jasmine.createSpyObj<MqttService>(
-      'MqttService',
-      ['publishState'],
-      {
-        brokerHost: 'broker.example.com',
-        brokerPort: 8883,
-        publishTopic: 'home/esp1/led/control',
-        subscribeTopic: 'home/esp1/led/status',
-        state$: of('subscribed'),
-        subscribed$: of(true),
-        logs$: of([
-          {
-            direction: 'received',
-            message: 'Message received',
-            payload: '{"state":"ON"}',
-            timestamp: '2026-04-01T00:00:00.000Z',
-            topic: 'home/esp1/led/status',
-          },
-        ]),
-      },
-    );
-
     await TestBed.configureTestingModule({
       imports: [HomePage],
-      providers: [{ provide: MqttService, useValue: mqttService }],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomePage);
@@ -46,52 +22,19 @@ describe('HomePage', () => {
     expect(component).toBeTruthy();
   });
 
-  it('renders the ON and OFF buttons', () => {
-    const buttons = Array.from(
-      fixture.nativeElement.querySelectorAll('ion-button'),
-      (button) => (button as HTMLElement).textContent?.trim(),
-    );
-
-    expect(buttons).toContain('ON');
-    expect(buttons).toContain('OFF');
+  it('renders the easy remote call to action', () => {
+    expect(fixture.nativeElement.textContent).toContain('EASY REMOTE');
   });
 
-  it('publishes ON when the ON button is clicked', () => {
-    const onButton: HTMLIonButtonElement = fixture.nativeElement.querySelectorAll('ion-button')[0];
-    onButton.click();
-
-    expect(mqttService.publishState).toHaveBeenCalledWith('ON');
+  it('renders the welcome copy and contact section', () => {
+    expect(fixture.nativeElement.textContent).toContain('Hello! Thank you for choosing');
+    expect(fixture.nativeElement.textContent).toContain('CONTACT US');
+    expect(fixture.nativeElement.textContent).toContain('09063071291');
   });
 
-  it('shows the activity log message', () => {
-    expect(fixture.nativeElement.textContent).toContain('Message received');
-    expect(fixture.nativeElement.textContent).toContain('home/esp1/led/status');
-  });
+  it('links the main action to the easy remote page', () => {
+    const cta = fixture.nativeElement.querySelector('.remote-button') as HTMLAnchorElement;
 
-  it('shows the empty state when there are no logs', async () => {
-    mqttService = jasmine.createSpyObj<MqttService>(
-      'MqttService',
-      ['publishState'],
-      {
-        brokerHost: 'broker.example.com',
-        brokerPort: 8883,
-        publishTopic: 'home/esp1/led/control',
-        subscribeTopic: 'home/esp1/led/status',
-        state$: of('connecting'),
-        subscribed$: of(false),
-        logs$: of([]),
-      },
-    );
-
-    TestBed.resetTestingModule();
-    await TestBed.configureTestingModule({
-      imports: [HomePage],
-      providers: [{ provide: MqttService, useValue: mqttService }],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(HomePage);
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('No MQTT activity yet');
+    expect(cta.getAttribute('href')).toContain('/easy-remote');
   });
 });

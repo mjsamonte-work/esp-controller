@@ -1,96 +1,54 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>LED Controller</ion-title>
+    <div class="toolbar-shell">
+      <div class="toolbar-spacer" aria-hidden="true"></div>
+      <ion-title>
+        EAS<span class="brand-y">Y</span> PH
+      </ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">LED Controller</ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <div class="home-shell">
+    <div class="tagline-band">
+      <p>Easy life with EASY PH</p>
+    </div>
 
-  <div class="page-shell">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-subtitle>HiveMQ Cloud</ion-card-subtitle>
-        <ion-card-title>MQTT Connection</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="status-row">
-          <span class="status-label">Connection</span>
-          <ion-chip [ngClass]="'state-' + (connectionState$ | async)">
-            {{ connectionState$ | async }}
-          </ion-chip>
-        </div>
-        <div class="status-row">
-          <span class="status-label">Subscribed</span>
-          <ion-chip [ngClass]="(subscribed$ | async) ? 'state-subscribed' : 'state-disconnected'">
-            {{ (subscribed$ | async) ? 'yes' : 'no' }}
-          </ion-chip>
-        </div>
-        <div class="detail-grid">
-          <div>
-            <p class="detail-label">Broker</p>
-            <p class="detail-value">{{ brokerHost }}</p>
-          </div>
-          <div>
-            <p class="detail-label">TLS Port</p>
-            <p class="detail-value">{{ brokerPort }}</p>
-          </div>
-          <div>
-            <p class="detail-label">Publish Topic</p>
-            <p class="detail-value">{{ publishTopic }}</p>
-          </div>
-          <div>
-            <p class="detail-label">Subscribe Topic</p>
-            <p class="detail-value">{{ subscribeTopic }}</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
+    <div class="hero-stage">
+      <ion-card class="welcome-card">
+        <ion-card-content>
+          <p>Hello! Thank you for choosing <strong>EASY PH.</strong></p>
+          <p>We are glad to serve you. Enjoy your easier life with EASY PH.</p>
+        </ion-card-content>
+      </ion-card>
 
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Power Controls</ion-card-title>
-        <ion-card-subtitle>Send LED commands</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="actions">
-          <ion-button color="success" expand="block" size="large" (click)="sendState('ON')">
-            ON
-          </ion-button>
-          <ion-button color="danger" expand="block" size="large" (click)="sendState('OFF')">
-            OFF
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
+      <ion-button class="remote-button" expand="block" routerLink="/easy-remote">
+        EASY REMOTE
+      </ion-button>
+    </div>
 
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Activity Log</ion-card-title>
-        <ion-card-subtitle>Subscribed messages and local MQTT events</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-list lines="full" *ngIf="logs$ | async as logs">
-          <ion-item *ngIf="!logs.length" class="empty-state">
-            <ion-label>No MQTT activity yet. Logs will appear here after connect, publish, or subscribe events.</ion-label>
-          </ion-item>
+    <section class="contact-section">
+      <h2>CONTACT US</h2>
 
-          <ion-item *ngFor="let log of logs">
-            <ion-label>
-              <div class="log-meta">
-                <strong>{{ log.message }}</strong>
-                <ion-note>{{ log.timestamp | date:'mediumTime' }}</ion-note>
-              </div>
-              <p>{{ log.direction | uppercase }}<span *ngIf="log.topic"> • {{ log.topic }}</span></p>
-              <p *ngIf="log.payload">{{ log.payload }}</p>
-            </ion-label>
-          </ion-item>
-        </ion-list>
-      </ion-card-content>
-    </ion-card>
+      <ion-list class="contact-list" lines="none">
+        <ion-item class="contact-card" detail="false" href="mailto:easyuansph@gmail.com">
+          <div class="contact-content">
+            <ion-icon class="contact-icon" name="mail-outline"></ion-icon>
+            <ion-label>easyuansph@gmail.com</ion-label>
+          </div>
+        </ion-item>
+
+        <ion-item class="contact-card" detail="false" href="tel:09063071291">
+          <div class="contact-content">
+            <ion-icon class="contact-icon" name="call-outline"></ion-icon>
+            <ion-label>09063071291</ion-label>
+          </div>
+        </ion-item>
+      </ion-list>
+    </section>
   </div>
 </ion-content>
