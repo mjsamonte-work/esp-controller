@@ -1,20 +1,15 @@
 import { Component } from '@angular/core';
-import { addIcons } from 'ionicons';
-import { callOutline, mailOutline } from 'ionicons/icons';
 import {
   IonButton,
   IonCard,
   IonCardContent,
   IonContent,
   IonHeader,
-  IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { RouterLink } from '@angular/router';
+import { ContactUsComponent } from '../contact-us/contact-us.component';
 
 @Component({
   selector: 'app-home',
@@ -26,20 +21,10 @@ import { RouterLink } from '@angular/router';
     IonCardContent,
     IonContent,
     IonHeader,
-    IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
     IonTitle,
     IonToolbar,
     RouterLink,
+    ContactUsComponent,
   ],
 })
-export class HomePage {
-  constructor() {
-    addIcons({
-      'call-outline': callOutline,
-      'mail-outline': mailOutline,
-    });
-  }
-}
+export class HomePage {}

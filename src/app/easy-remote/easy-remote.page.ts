@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf, UpperCasePipe } from '@angular/common';
+import { AsyncPipe, NgClass, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
@@ -9,16 +9,13 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonNote,
   IonSpinner,
   IonToast,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 
+import { ContactUsComponent } from '../contact-us/contact-us.component';
 import { MqttService } from '../services/mqtt.service';
 
 @Component({
@@ -27,30 +24,23 @@ import { MqttService } from '../services/mqtt.service';
   styleUrls: ['easy-remote.page.scss'],
   imports: [
     AsyncPipe,
-    DatePipe,
     NgClass,
-    NgFor,
     NgIf,
-    UpperCasePipe,
     IonAlert,
     IonButton,
     IonContent,
     IonHeader,
     IonIcon,
-    IonItem,
-    IonLabel,
-    IonList,
-    IonNote,
     IonSpinner,
     IonToast,
     IonTitle,
     IonToolbar,
     RouterLink,
+    ContactUsComponent,
   ],
 })
 export class EasyRemotePage {
   readonly connectionState$ = this.mqttService.state$;
-  readonly logs$ = this.mqttService.logs$;
   readonly confirmButtons = [
     {
       text: 'Cancel',

@@ -64,10 +64,10 @@ describe('EasyRemotePage', () => {
     expect(fixture.nativeElement.textContent).toContain('Connected');
   });
 
-  it('shows the activity log below the controls', () => {
-    expect(fixture.nativeElement.textContent).toContain('Activity Log');
-    expect(fixture.nativeElement.textContent).toContain('Message received');
-    expect(fixture.nativeElement.textContent).toContain('home/esp1/led/status');
+  it('shows the contact section below the remote controls', () => {
+    expect(fixture.nativeElement.textContent).toContain('CONTACT US');
+    expect(fixture.nativeElement.textContent).toContain('easyuansph@gmail.com');
+    expect(fixture.nativeElement.textContent).toContain('09063071291');
   });
 
   it('disables the buttons while submitting and shows a success toast', async () => {

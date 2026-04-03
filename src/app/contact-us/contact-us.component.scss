@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.contact-section {
+  padding: 28px 24px 32px;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid rgba(13, 87, 184, 0.08);
+}
+
+.contact-section h2 {
+  margin: 0 0 22px;
+  color: var(--easy-muted, #5f6672);
+  text-align: center;
+  font-size: clamp(1.2rem, 3vw, 1.45rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+
+.contact-list {
+  background: transparent;
+  margin: 0 auto;
+  max-width: 640px;
+  padding: 0;
+  display: grid;
+  gap: 20px;
+}
+
+.contact-card {
+  margin: 0;
+  --background: var(--easy-contact, #dfe6f2);
+  --border-radius: 30px;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --inner-padding-start: 0;
+  --min-height: 78px;
+  color: var(--easy-blue, #0d57b8);
+}
+
+.contact-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-inline: 20px;
+}
+
+.contact-card ion-label {
+  color: var(--easy-blue, #0d57b8);
+  font-size: clamp(1.2rem, 3.2vw, 1.35rem);
+  font-weight: 800;
+  text-align: center;
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+.contact-icon {
+  color: var(--easy-muted, #5f6672);
+  font-size: 1.55rem;
+}
+
+.contact-card::part(native) {
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .contact-section {
+    padding: 24px 16px 28px;
+  }
+
+  .contact-card {
+    --min-height: 68px;
+    --border-radius: 24px;
+  }
+
+  .contact-card ion-label {
+    font-size: 1.05rem;
+  }
+
+  .contact-icon {
+    font-size: 1.35rem;
+  }
+}

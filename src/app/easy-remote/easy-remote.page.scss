@@ -74,14 +74,19 @@ ion-title {
 
 .remote-shell {
   min-height: 100%;
-  padding: 24px 20px 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.remote-stage {
+  flex: 1;
+  padding: 24px 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.status-card,
-.log-card {
+.status-card {
   background: rgba(255, 255, 255, 0.96);
   border-radius: 28px;
   box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
@@ -133,7 +138,7 @@ ion-title {
 }
 
 .remote-actions {
-  margin-top: 150px;
+  margin-top: auto;
   display: grid;
   gap: 14px;
 }
@@ -170,80 +175,6 @@ ion-spinner {
   height: 18px;
 }
 
-.log-card {
-  padding: 18px;
-  min-height: 220px;
-  max-height: 320px;
-  display: flex;
-  flex-direction: column;
-}
-
-.info-title {
-  margin: 0 0 14px;
-  color: var(--easy-text);
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.log-list {
-  background: transparent;
-  padding: 0;
-  min-height: 0;
-  max-height: none;
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.log-item,
-.empty-state {
-  --background: transparent;
-  --padding-start: 0;
-  --inner-padding-end: 0;
-}
-
-.empty-state {
-  --min-height: 56px;
-}
-
-.log-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-}
-
-.log-item ion-label strong,
-.log-item ion-label p,
-.empty-state ion-label {
-  color: var(--easy-text);
-}
-
-.log-item ion-label strong {
-  font-size: 0.95rem;
-}
-
-.log-item ion-label p {
-  margin: 4px 0 0;
-  font-size: 0.82rem;
-  overflow-wrap: anywhere;
-}
-
-ion-note {
-  font-size: 0.78rem;
-}
-
-.log-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.log-list::-webkit-scrollbar-thumb {
-  background: rgba(13, 87, 184, 0.24);
-  border-radius: 999px;
-}
-
 @media (max-width: 480px) {
   ion-toolbar {
     --min-height: 80px;
@@ -265,7 +196,11 @@ ion-note {
   }
 
   .remote-shell {
-    padding: 18px 16px 28px;
+    min-height: 100%;
+  }
+
+  .remote-stage {
+    padding: 18px 16px 24px;
     gap: 18px;
   }
 
