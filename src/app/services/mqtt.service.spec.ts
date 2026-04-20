@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { Subject, firstValueFrom } from 'rxjs';
 import type { IClientOptions, ISubscriptionGrant, MqttClient } from 'mqtt';
 
@@ -100,7 +100,7 @@ describe('MqttService', () => {
     connect$.next();
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      'home/esp1/led/status',
+      ['home/esp1/led/status'],
       { qos: 0 },
       jasmine.any(Function),
     );
@@ -111,7 +111,31 @@ describe('MqttService', () => {
 
     expect(mockClient.publish).toHaveBeenCalledWith(
       'home/esp1/led/control',
-      '{"state":"ON"}',
+      jasmine.stringMatching(/"state":"ON"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'home/esp1/led/control',
+      jasmine.stringMatching(/"timestamp":"[^"]+"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+  });
+
+  it('publishes a health check to the device topic', () => {
+    service.checkDeviceStatus('esp1');
+    connect$.next();
+
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'home/esp1/led/control',
+      jasmine.stringMatching(/"state":"HEALTH"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'home/esp1/led/control',
+      jasmine.stringMatching(/"timestamp":"[^"]+"/),
       { qos: 0 },
       jasmine.any(Function),
     );
@@ -168,9 +192,39 @@ describe('MqttService', () => {
 
     expect(mockClient.unsubscribe).toHaveBeenCalledWith('home/esp1/led/status');
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      'home/esp2/led/status',
+      ['home/esp2/led/status'],
       { qos: 0 },
       jasmine.any(Function),
     );
   });
+
+  it('marks the device online when a health reply is received', async () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+    await service.checkDeviceStatus('esp1');
+
+    message$.next({
+      topic: 'home/esp1/led/status',
+      payload: new TextEncoder().encode('pong'),
+    });
+
+    const state = await firstValueFrom(service.deviceHealth$);
+
+    expect(state).toBe('online');
+  });
+
+  it('marks the device offline after a health check timeout', fakeAsync(() => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+
+    void service.checkDeviceStatus('esp1');
+    tick(5001);
+
+    let state!: string;
+    service.deviceHealth$.subscribe((value) => {
+      state = value;
+    });
+
+    expect(state).toBe('offline');
+  }));
 });

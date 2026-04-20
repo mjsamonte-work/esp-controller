@@ -1,8 +1,9 @@
 import { AsyncPipe, NgClass, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonAlert,
   IonButton,
@@ -15,10 +16,9 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 
-import { ContactUsComponent } from '../contact-us/contact-us.component';
 import { Device } from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
-import { MqttService } from '../services/mqtt.service';
+import { DeviceHealthState, MqttConnectionState, MqttService } from '../services/mqtt.service';
 
 @Component({
   selector: 'app-easy-remote',
@@ -38,11 +38,12 @@ import { MqttService } from '../services/mqtt.service';
     IonTitle,
     IonToolbar,
     RouterLink,
-    ContactUsComponent,
   ],
 })
-export class EasyRemotePage implements OnInit {
+export class EasyRemotePage implements OnInit, OnDestroy {
   readonly connectionState$ = this.mqttService.state$;
+  readonly deviceHealth$ = this.mqttService.deviceHealth$;
+  readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
   readonly confirmButtons = [
     {
       text: 'Cancel',
@@ -63,6 +64,9 @@ export class EasyRemotePage implements OnInit {
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
   device: Device | null = null;
+  currentDeviceHealth: DeviceHealthState = 'unknown';
+  currentConnectionState: MqttConnectionState = 'disconnected';
+  private readonly subscriptions = new Subscription();
 
   constructor(
     private readonly mqttService: MqttService,
@@ -75,7 +79,22 @@ export class EasyRemotePage implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+  }
+
   async ngOnInit(): Promise<void> {
+    this.subscriptions.add(
+      this.deviceHealth$.subscribe((state) => {
+        this.currentDeviceHealth = state;
+      }),
+    );
+    this.subscriptions.add(
+      this.connectionState$.subscribe((state) => {
+        this.currentConnectionState = state;
+      }),
+    );
+
     await this.deviceStore.ready();
 
     const deviceCode = this.route.snapshot.paramMap.get('deviceCode') ?? '';
@@ -92,10 +111,11 @@ export class EasyRemotePage implements OnInit {
 
     this.device = device;
     this.mqttService.setActiveDevice(device.code);
+    await this.refreshDeviceStatus();
   }
 
   requestStateChange(state: 'ON' | 'OFF'): void {
-    if (this.isSubmitting) {
+    if (this.isSubmitting || !this.canSendDeviceCommand) {
       return;
     }
 
@@ -120,7 +140,7 @@ export class EasyRemotePage implements OnInit {
   }
 
   async sendState(state: 'ON' | 'OFF'): Promise<void> {
-    if (this.isSubmitting || !this.device) {
+    if (this.isSubmitting || !this.device || !this.canSendDeviceCommand) {
       return;
     }
 
@@ -157,13 +177,75 @@ export class EasyRemotePage implements OnInit {
     return this.device?.code ?? '';
   }
 
+  get deviceName(): string {
+    return this.device?.name ?? '';
+  }
+
   get deviceLocation(): string {
     return this.device?.location ?? '';
+  }
+
+  get canSendDeviceCommand(): boolean {
+    return this.currentDeviceHealth === 'online' && this.isServerConnected(this.currentConnectionState);
+  }
+
+  async refreshDeviceStatus(): Promise<void> {
+    if (!this.device) {
+      return;
+    }
+
+    try {
+      await this.mqttService.checkDeviceStatus(this.device.code);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to check device status.';
+      this.presentToast(message, 'danger');
+    }
+  }
+
+  getServerStatusLabel(state: string | null): string {
+    return this.isServerConnected(state) ? 'Connected' : 'Disconnected';
+  }
+
+  getServerStatusClass(state: string | null): string {
+    return this.isServerConnected(state)
+      ? 'status-connected'
+      : 'status-disconnected';
+  }
+
+  getDeviceStatusLabel(state: DeviceHealthState | null): string {
+    switch (state) {
+      case 'online':
+        return 'Online';
+      case 'offline':
+        return 'Offline';
+      case 'checking':
+        return 'Checking...';
+      case 'unknown':
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getDeviceStatusClass(state: DeviceHealthState | null): string {
+    switch (state) {
+      case 'online':
+        return 'status-connected';
+      case 'checking':
+      case 'unknown':
+        return 'status-pending';
+      case 'offline':
+      default:
+        return 'status-disconnected';
+    }
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {
     this.toastMessage = message;
     this.toastColor = color;
     this.toastOpen = true;
+  }
+
+  private isServerConnected(state: string | null): boolean {
+    return state === 'subscribed' || state === 'connected';
   }
 }

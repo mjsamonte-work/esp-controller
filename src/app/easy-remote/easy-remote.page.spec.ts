@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 
 import { EasyRemotePage } from './easy-remote.page';
 import { DeviceStoreService } from '../services/device-store.service';
@@ -12,13 +12,21 @@ describe('EasyRemotePage', () => {
   let deviceStore: jasmine.SpyObj<DeviceStoreService>;
   let mqttService: jasmine.SpyObj<MqttService>;
   let router: Router;
+  let connectionState$: BehaviorSubject<'subscribed' | 'disconnected'>;
+  let deviceHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
+  let deviceCheckInProgress$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
+    connectionState$ = new BehaviorSubject<'subscribed' | 'disconnected'>('subscribed');
+    deviceHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
+    deviceCheckInProgress$ = new BehaviorSubject<boolean>(false);
     mqttService = jasmine.createSpyObj<MqttService>(
       'MqttService',
-      ['publishState', 'setActiveDevice'],
+      ['publishState', 'setActiveDevice', 'checkDeviceStatus'],
       {
-        state$: of('subscribed'),
+        state$: connectionState$.asObservable(),
+        deviceHealth$: deviceHealth$.asObservable(),
+        deviceCheckInProgress$: deviceCheckInProgress$.asObservable(),
         logs$: of([
           {
             direction: 'received',
@@ -31,6 +39,7 @@ describe('EasyRemotePage', () => {
       },
     );
     mqttService.publishState.and.returnValue(Promise.resolve());
+    mqttService.checkDeviceStatus.and.returnValue(Promise.resolve());
     deviceStore = jasmine.createSpyObj<DeviceStoreService>('DeviceStoreService', [
       'ready',
       'findDevice',
@@ -77,11 +86,15 @@ describe('EasyRemotePage', () => {
   it('renders the remote control buttons', () => {
     expect(fixture.nativeElement.textContent).toContain('TURN ON');
     expect(fixture.nativeElement.textContent).toContain('TURN OFF');
+    expect(fixture.nativeElement.textContent).toContain('CHECK DEVICE STATUS');
   });
 
   it('publishes ON when the turn on button is clicked', async () => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+
     const buttons = fixture.nativeElement.querySelectorAll('ion-button');
-    const onButton = buttons[0] as HTMLIonButtonElement;
+    const onButton = buttons[1] as HTMLIonButtonElement;
 
     onButton.click();
     fixture.detectChanges();
@@ -91,24 +104,37 @@ describe('EasyRemotePage', () => {
     expect(mqttService.publishState).toHaveBeenCalledWith('esp1', 'ON');
   });
 
-  it('shows connected state when subscription is active', () => {
-    expect(fixture.nativeElement.textContent).toContain('Connected');
-  });
+  it('shows separate device and server statuses', () => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
 
-  it('shows the contact section below the remote controls', () => {
-    expect(fixture.nativeElement.textContent).toContain('CONTACT US');
-    expect(fixture.nativeElement.textContent).toContain('easyuansph@gmail.com');
-    expect(fixture.nativeElement.textContent).toContain('09063071291');
+    expect(fixture.nativeElement.textContent).toContain('Device Status');
+    expect(fixture.nativeElement.textContent).toContain('Server Status');
+    expect(fixture.nativeElement.textContent).toContain('Online');
+    expect(fixture.nativeElement.textContent).toContain('Connected');
   });
 
   it('shows the selected device details', () => {
     expect(fixture.nativeElement.textContent).toContain('Kitchen Lamp');
+    expect(fixture.nativeElement.textContent).toContain('Code');
     expect(fixture.nativeElement.textContent).toContain('esp1');
+    expect(fixture.nativeElement.textContent).toContain('Location');
     expect(fixture.nativeElement.textContent).toContain('Kitchen');
+    expect(fixture.nativeElement.textContent).not.toContain('Selected Device');
     expect(mqttService.setActiveDevice).toHaveBeenCalledWith('esp1');
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+  });
+
+  it('does not show the contact us section', () => {
+    expect(fixture.nativeElement.textContent).not.toContain('CONTACT US');
+    expect(fixture.nativeElement.textContent).not.toContain('easyuansph@gmail.com');
+    expect(fixture.nativeElement.textContent).not.toContain('09063071291');
   });
 
   it('disables the buttons while submitting and shows a success toast', async () => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+
     let resolvePublish!: () => void;
     mqttService.publishState.and.returnValue(
       new Promise<void>((resolve) => {
@@ -116,7 +142,7 @@ describe('EasyRemotePage', () => {
       }),
     );
 
-    const onButton = fixture.nativeElement.querySelectorAll('ion-button')[0] as HTMLIonButtonElement;
+    const onButton = fixture.nativeElement.querySelectorAll('ion-button')[1] as HTMLIonButtonElement;
     onButton.click();
     fixture.detectChanges();
     await component.confirmStateChange();
@@ -138,6 +164,9 @@ describe('EasyRemotePage', () => {
   });
 
   it('opens a confirmation alert before publishing', () => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+
     component.requestStateChange('OFF');
 
     expect(component.confirmAlertOpen).toBeTrue();
@@ -147,6 +176,9 @@ describe('EasyRemotePage', () => {
   });
 
   it('does not publish when the user cancels the confirmation', () => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+
     component.requestStateChange('ON');
     component.cancelStateChange();
 
@@ -169,5 +201,31 @@ describe('EasyRemotePage', () => {
         message: 'Device not found. Please select a saved device.',
       },
     });
+  });
+
+  it('disables the control buttons until the device is online', () => {
+    const buttons = fixture.nativeElement.querySelectorAll('ion-button');
+    const onButton = buttons[1] as HTMLIonButtonElement;
+    const offButton = buttons[2] as HTMLIonButtonElement;
+
+    expect(component.canSendDeviceCommand).toBeFalse();
+    expect(onButton.disabled).toBeTrue();
+    expect(offButton.disabled).toBeTrue();
+
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+
+    expect(component.canSendDeviceCommand).toBeTrue();
+    expect(onButton.disabled).toBeFalse();
+    expect(offButton.disabled).toBeFalse();
+  });
+
+  it('triggers a manual device status check', () => {
+    mqttService.checkDeviceStatus.calls.reset();
+
+    const button = fixture.nativeElement.querySelectorAll('ion-button')[0] as HTMLIonButtonElement;
+    button.click();
+
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
   });
 });

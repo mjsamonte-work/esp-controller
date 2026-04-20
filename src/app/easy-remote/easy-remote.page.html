@@ -17,23 +17,58 @@
 <ion-content [fullscreen]="true">
   <div class="remote-shell">
     <div class="remote-stage">
+      <section class="page-heading">
+        <h1>Device: {{ deviceName || deviceCode }}</h1>
+      </section>
+
       <section class="status-card">
-        <div>
-          <p class="section-label">Active Device</p>
-          <h2>{{ deviceCode }}</h2>
-          <p class="device-location">{{ deviceLocation }}</p>
-        </div>
+        <div class="status-grid">
+          <div class="status-details">
+            <div class="detail-item">
+              <p class="section-label">Code</p>
+              <p class="device-meta">{{ deviceCode }}</p>
+            </div>
+            <div class="detail-item">
+              <p class="section-label">Location</p>
+              <p class="device-meta">{{ deviceLocation }}</p>
+            </div>
+          </div>
 
-        <div>
-          <p class="section-label">Connection</p>
-          <h2>Connection Status:</h2>
-        </div>
+          <div class="status-row">
+            <div class="status-copy">
+              <p class="section-label">Device Status</p>
+              <p class="status-help">Shows if the actual device is responding right now.</p>
+            </div>
 
-        <div
-          class="status-pill"
-          [ngClass]="(connectionState$ | async) === 'subscribed' ? 'status-connected' : 'status-disconnected'"
-        >
-          {{ (connectionState$ | async) === 'subscribed' ? 'Connected' : 'Disconnected' }}
+            <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
+              {{ getDeviceStatusLabel(deviceHealth$ | async) }}
+            </div>
+          </div>
+
+          <div class="status-row">
+            <div class="status-copy">
+              <p class="section-label">Server Status</p>
+              <p class="status-help">Shows if the app is connected to the remote service.</p>
+            </div>
+
+            <div class="status-pill" [ngClass]="getServerStatusClass(connectionState$ | async)">
+              {{ getServerStatusLabel(connectionState$ | async) }}
+            </div>
+          </div>
+
+          <ion-button
+            class="status-check-button"
+            fill="outline"
+            expand="block"
+            [disabled]="(deviceCheckInProgress$ | async) === true"
+            (click)="refreshDeviceStatus()"
+          >
+            <ng-container *ngIf="(deviceCheckInProgress$ | async) === true; else checkStatusLabel">
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>CHECKING...</span>
+            </ng-container>
+            <ng-template #checkStatusLabel>CHECK DEVICE STATUS</ng-template>
+          </ion-button>
         </div>
       </section>
 
@@ -41,7 +76,7 @@
         <ion-button
           class="action-button on-button"
           expand="block"
-          [disabled]="isSubmitting"
+          [disabled]="isSubmitting || !canSendDeviceCommand"
           (click)="requestStateChange('ON')"
         >
           <ng-container *ngIf="submittingState === 'ON'; else onLabel">
@@ -53,7 +88,7 @@
         <ion-button
           class="action-button off-button"
           expand="block"
-          [disabled]="isSubmitting"
+          [disabled]="isSubmitting || !canSendDeviceCommand"
           (click)="requestStateChange('OFF')"
         >
           <ng-container *ngIf="submittingState === 'OFF'; else offLabel">
@@ -64,8 +99,6 @@
         </ion-button>
       </section>
     </div>
-
-    <app-contact-us></app-contact-us>
   </div>
 
   <ion-toast

@@ -86,6 +86,18 @@ ion-title {
   gap: 20px;
 }
 
+.page-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.page-heading h1 {
+  margin: 0;
+  color: var(--easy-text);
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  line-height: 1.05;
+}
+
 .status-card {
   background: rgba(255, 255, 255, 0.96);
   border-radius: 28px;
@@ -93,11 +105,37 @@ ion-title {
 }
 
 .status-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px 20px;
+}
+
+.status-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.status-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.detail-item {
+  display: grid;
+  gap: 6px;
+}
+
+.status-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 22px 20px;
+  gap: 16px;
+}
+
+.status-copy {
+  display: grid;
+  gap: 4px;
 }
 
 .section-label {
@@ -114,10 +152,17 @@ ion-title {
   color: var(--easy-text);
 }
 
-.device-location {
-  margin: 8px 0 0;
+.device-meta {
+  margin: 0;
   color: var(--easy-muted);
   font-size: 0.95rem;
+}
+
+.status-help {
+  margin: 0;
+  color: var(--easy-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .status-card h2 {
@@ -141,6 +186,24 @@ ion-title {
 .status-disconnected {
   background: var(--easy-red-soft);
   color: var(--easy-red);
+}
+
+.status-pending {
+  background: #fff4d7;
+  color: #976800;
+}
+
+.status-check-button {
+  --border-color: rgba(13, 87, 184, 0.22);
+  --color: var(--easy-blue);
+  --border-radius: 18px;
+  min-height: 52px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.status-check-button::part(native) {
+  gap: 10px;
 }
 
 .remote-actions {
@@ -210,10 +273,21 @@ ion-spinner {
     gap: 18px;
   }
 
+  .page-heading h1 {
+    font-size: clamp(1.5rem, 8vw, 2rem);
+  }
+
   .status-card {
+    padding: 18px 16px;
+  }
+
+  .status-row {
     flex-direction: column;
     align-items: flex-start;
-    padding: 18px 16px;
+  }
+
+  .status-details {
+    grid-template-columns: 1fr;
   }
 
   .status-pill {
