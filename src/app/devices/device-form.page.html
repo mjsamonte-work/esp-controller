@@ -1,0 +1,66 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" routerLink="/devices" aria-label="Back to devices">
+        <span aria-hidden="true">&larr;</span>
+      </a>
+      <ion-title>{{ pageTitle }}</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="device-form-shell">
+    <div class="device-form-stage">
+      <ion-card class="form-card">
+        <ion-card-content>
+          <p class="section-label">{{ isEditMode ? 'Edit Device' : 'Add Device' }}</p>
+          <h2>{{ pageHeading }}</h2>
+
+          <form [formGroup]="deviceForm" (ngSubmit)="saveDevice()" class="device-form">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Device Code</ion-label>
+              <ion-input
+                formControlName="code"
+                placeholder="e.g. esp1"
+                autocomplete="off"
+                [readonly]="isEditMode"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="hasCodeError">Device code is required.</ion-text>
+
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Location</ion-label>
+              <ion-input
+                formControlName="location"
+                placeholder="e.g. Living Room"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="hasLocationError">Location is required.</ion-text>
+
+            <ion-button class="submit-button" expand="block" type="submit">
+              <ion-icon
+                slot="start"
+                [name]="isEditMode ? 'save-outline' : 'add-outline'"
+              ></ion-icon>
+              {{ submitLabel }}
+            </ion-button>
+          </form>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

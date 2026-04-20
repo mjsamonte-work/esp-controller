@@ -2,11 +2,8 @@
   --easy-blue: #0d57b8;
   --easy-blue-dark: #09489d;
   --easy-blue-soft: #e7effc;
-  --easy-red: #e31d28;
-  --easy-red-soft: #fbdcdf;
   --easy-text: #2f3440;
   --easy-muted: #667085;
-  --easy-surface: #ffffff;
   --easy-background-top: #eef2f7;
   --easy-background-bottom: #f8fbff;
 }
@@ -40,22 +37,15 @@ ion-content {
   color: var(--easy-text);
   text-decoration: none;
   border-radius: 12px;
-}
-
-.back-button ion-icon {
   font-size: 1.4rem;
 }
 
 ion-title {
   color: var(--easy-blue);
-  font-size: 1.55rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-align: center;
-}
-
-.brand-y {
-  color: var(--easy-red);
 }
 
 .logo-slot {
@@ -72,31 +62,24 @@ ion-title {
   object-fit: contain;
 }
 
-.remote-shell {
+.device-form-shell {
   min-height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.remote-stage {
+.device-form-stage {
   flex: 1;
-  padding: 24px 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  padding: 24px 20px;
 }
 
-.status-card {
+.form-card {
   background: rgba(255, 255, 255, 0.96);
   border-radius: 28px;
   box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
 }
 
-.status-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+.form-card ion-card-content {
   padding: 22px 20px;
 }
 
@@ -108,86 +91,41 @@ ion-title {
   letter-spacing: 0.08em;
 }
 
-.status-card h2,
-.info-item strong {
+.form-card h2 {
   margin: 0;
   color: var(--easy-text);
-}
-
-.device-location {
-  margin: 8px 0 0;
-  color: var(--easy-muted);
-  font-size: 0.95rem;
-}
-
-.status-card h2 {
   font-size: clamp(1.2rem, 3.5vw, 1.6rem);
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
-.status-pill {
-  border-radius: 999px;
-  padding: 10px 18px;
-  font-size: 1rem;
-  font-weight: 800;
-  white-space: nowrap;
+.device-form {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.status-connected {
-  background: rgba(24, 157, 74, 0.14);
-  color: #148544;
+.input-item {
+  --background: var(--easy-blue-soft);
+  --border-radius: 18px;
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
 }
 
-.status-disconnected {
-  background: var(--easy-red-soft);
-  color: var(--easy-red);
-}
-
-.remote-actions {
-  margin-top: auto;
-  display: grid;
-  gap: 14px;
-}
-
-.action-button {
+.submit-button {
+  margin-top: 12px;
   --border-radius: 999px;
+  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
   --box-shadow: 0 18px 28px rgba(13, 87, 184, 0.18);
-  height: 68px;
-  font-size: 1.3rem;
+  height: 58px;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: 0.04em;
-}
-
-.action-button::part(native) {
-  padding-inline: 24px;
-  gap: 10px;
-}
-
-.on-button {
-  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
-  --background-activated: var(--easy-blue-dark);
-  --background-hover: #1557ab;
-}
-
-.off-button {
-  --background: linear-gradient(180deg, #f22831 0%, #d91620 100%);
-  --background-activated: #c8141e;
-  --background-hover: #db1b24;
-  --box-shadow: 0 18px 28px rgba(227, 29, 40, 0.22);
-}
-
-ion-spinner {
-  width: 18px;
-  height: 18px;
 }
 
 @media (max-width: 480px) {
   ion-toolbar {
     --min-height: 80px;
-  }
-
-  ion-title {
-    font-size: 1.35rem;
   }
 
   .toolbar-shell {
@@ -201,28 +139,7 @@ ion-spinner {
     height: 48px;
   }
 
-  .remote-shell {
-    min-height: 100%;
-  }
-
-  .remote-stage {
+  .device-form-stage {
     padding: 18px 16px 24px;
-    gap: 18px;
-  }
-
-  .status-card {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 18px 16px;
-  }
-
-  .status-pill {
-    width: 100%;
-    text-align: center;
-  }
-
-  .action-button {
-    height: 58px;
-    font-size: 1.1rem;
   }
 }

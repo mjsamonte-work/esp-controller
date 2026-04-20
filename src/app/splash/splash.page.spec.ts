@@ -42,4 +42,4 @@ describe('SplashPage', () => {
 
     expect(navigateSpy).toHaveBeenCalledWith('/home', { replaceUrl: true });
   }));
-}
+});

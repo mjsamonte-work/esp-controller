@@ -35,6 +35,6 @@ describe('HomePage', () => {
   it('links the main action to the easy remote page', () => {
     const cta = fixture.nativeElement.querySelector('.remote-button') as HTMLAnchorElement;
 
-    expect(cta.getAttribute('href')).toContain('/easy-remote');
+    expect(cta.getAttribute('href')).toContain('/devices');
   });
 });

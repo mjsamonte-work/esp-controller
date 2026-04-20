@@ -1,8 +1,8 @@
 import { AsyncPipe, NgClass, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   IonAlert,
   IonButton,
@@ -16,6 +16,8 @@ import {
 } from '@ionic/angular/standalone';
 
 import { ContactUsComponent } from '../contact-us/contact-us.component';
+import { Device } from '../models/device.model';
+import { DeviceStoreService } from '../services/device-store.service';
 import { MqttService } from '../services/mqtt.service';
 
 @Component({
@@ -39,7 +41,7 @@ import { MqttService } from '../services/mqtt.service';
     ContactUsComponent,
   ],
 })
-export class EasyRemotePage {
+export class EasyRemotePage implements OnInit {
   readonly connectionState$ = this.mqttService.state$;
   readonly confirmButtons = [
     {
@@ -60,11 +62,36 @@ export class EasyRemotePage {
   toastOpen = false;
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
+  device: Device | null = null;
 
-  constructor(private readonly mqttService: MqttService) {
+  constructor(
+    private readonly mqttService: MqttService,
+    private readonly deviceStore: DeviceStoreService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+  ) {
     addIcons({
       'chevron-back-outline': chevronBackOutline,
     });
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.deviceStore.ready();
+
+    const deviceCode = this.route.snapshot.paramMap.get('deviceCode') ?? '';
+    const device = this.deviceStore.findDevice(deviceCode);
+
+    if (!device) {
+      void this.router.navigate(['/devices'], {
+        state: {
+          message: 'Device not found. Please select a saved device.',
+        },
+      });
+      return;
+    }
+
+    this.device = device;
+    this.mqttService.setActiveDevice(device.code);
   }
 
   requestStateChange(state: 'ON' | 'OFF'): void {
@@ -93,7 +120,7 @@ export class EasyRemotePage {
   }
 
   async sendState(state: 'ON' | 'OFF'): Promise<void> {
-    if (this.isSubmitting) {
+    if (this.isSubmitting || !this.device) {
       return;
     }
 
@@ -101,7 +128,7 @@ export class EasyRemotePage {
     this.submittingState = state;
 
     try {
-      await this.mqttService.publishState(state);
+      await this.mqttService.publishState(this.device.code, state);
       this.presentToast(`${state === 'ON' ? 'Turn on' : 'Turn off'} completed.`, 'success');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
@@ -124,6 +151,14 @@ export class EasyRemotePage {
     return this.pendingState === 'ON'
       ? 'Are you sure you want to turn the remote on?'
       : 'Are you sure you want to turn the remote off?';
+  }
+
+  get deviceCode(): string {
+    return this.device?.code ?? '';
+  }
+
+  get deviceLocation(): string {
+    return this.device?.location ?? '';
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {

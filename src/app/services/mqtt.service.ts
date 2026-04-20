@@ -61,10 +61,10 @@ export class MqttService implements OnDestroy {
   private readonly stateSubject = new BehaviorSubject<MqttConnectionState>('disconnected');
   private readonly subscriptionSubject = new BehaviorSubject<boolean>(false);
   private readonly brokerUrl = `${this.websocketProtocol}://${this.mqttConfig.host}:${this.mqttConfig.websocketPort}${this.mqttConfig.path}`;
+  private activeDeviceCode: string | null = null;
+  private activeSubscribeTopic: string | null = null;
 
   readonly brokerHost = this.mqttConfig.host;
-  readonly publishTopic = this.mqttConfig.publishTopic;
-  readonly subscribeTopic = this.mqttConfig.subscribeTopic;
   readonly brokerPort = this.mqttConfig.websocketPort;
   readonly logs$ = this.logsSubject.asObservable();
   readonly state$ = this.stateSubject.asObservable();
@@ -84,29 +84,64 @@ export class MqttService implements OnDestroy {
     this.client?.end(true);
   }
 
-  publishState(state: 'ON' | 'OFF'): Promise<void> {
+  setActiveDevice(deviceCode: string): void {
+    const normalizedCode = deviceCode.trim();
+
+    if (!normalizedCode || normalizedCode === this.activeDeviceCode) {
+      return;
+    }
+
+    const previousTopic = this.activeSubscribeTopic;
+    this.activeDeviceCode = normalizedCode;
+    const { subscribeTopic } = this.resolveTopics(normalizedCode);
+    this.activeSubscribeTopic = subscribeTopic;
+    this.subscriptionSubject.next(false);
+
+    if (!this.client) {
+      return;
+    }
+
+    if (previousTopic && previousTopic !== subscribeTopic) {
+      this.client.unsubscribe?.(previousTopic);
+    }
+
+    if (this.stateSubject.value === 'connected' || this.stateSubject.value === 'subscribed') {
+      this.subscribeToActiveDevice();
+    }
+  }
+
+  publishState(deviceCode: string, state: 'ON' | 'OFF'): Promise<void> {
     if (!this.client) {
       this.stateSubject.next('error');
       this.addLog({
         direction: 'error',
         message: `Cannot publish ${state} command`,
         payload: 'MQTT client is unavailable',
-        topic: this.publishTopic,
+        topic: this.resolveTopics(deviceCode).publishTopic,
       });
       return Promise.reject(new Error('MQTT client is unavailable'));
     }
 
+    const normalizedCode = deviceCode.trim();
+
+    if (!normalizedCode) {
+      return Promise.reject(new Error('Device code is required.'));
+    }
+
+    this.setActiveDevice(normalizedCode);
+
+    const { publishTopic } = this.resolveTopics(normalizedCode);
     const payload = JSON.stringify({ state });
 
     return new Promise<void>((resolve, reject) => {
-      this.client?.publish(this.publishTopic, payload, { qos: 0 }, (error?: Error) => {
+      this.client?.publish(publishTopic, payload, { qos: 0 }, (error?: Error) => {
         if (error) {
           this.stateSubject.next('error');
           this.addLog({
             direction: 'error',
             message: `Failed to publish ${state} command`,
             payload: error.message,
-            topic: this.publishTopic,
+            topic: publishTopic,
           });
           reject(error);
           return;
@@ -116,7 +151,7 @@ export class MqttService implements OnDestroy {
           direction: 'sent',
           message: `${state} command sent`,
           payload,
-          topic: this.publishTopic,
+          topic: publishTopic,
         });
         resolve();
       });
@@ -173,27 +208,7 @@ export class MqttService implements OnDestroy {
         payload: this.brokerUrl,
       });
 
-      client.subscribe(this.subscribeTopic, { qos: 0 }, (error?: Error | null) => {
-        if (error) {
-          this.stateSubject.next('error');
-          this.subscriptionSubject.next(false);
-          this.addLog({
-            direction: 'error',
-            message: 'Failed to subscribe to status topic',
-            payload: error.message,
-            topic: this.subscribeTopic,
-          });
-          return;
-        }
-
-        this.stateSubject.next('subscribed');
-        this.subscriptionSubject.next(true);
-        this.addLog({
-          direction: 'status',
-          message: 'Subscribed to status topic',
-          topic: this.subscribeTopic,
-        });
-      });
+      this.subscribeToActiveDevice();
     });
 
     client.on('message', (topic, payload) => {
@@ -242,5 +257,47 @@ export class MqttService implements OnDestroy {
       },
       ...this.logsSubject.value,
     ]);
+  }
+
+  private subscribeToActiveDevice(): void {
+    const client = this.client;
+
+    if (!client || !this.activeDeviceCode) {
+      return;
+    }
+
+    const { subscribeTopic } = this.resolveTopics(this.activeDeviceCode);
+
+    client.subscribe(subscribeTopic, { qos: 0 }, (error?: Error | null) => {
+      if (error) {
+        this.stateSubject.next('error');
+        this.subscriptionSubject.next(false);
+        this.addLog({
+          direction: 'error',
+          message: 'Failed to subscribe to status topic',
+          payload: error.message,
+          topic: subscribeTopic,
+        });
+        return;
+      }
+
+      this.activeSubscribeTopic = subscribeTopic;
+      this.stateSubject.next('subscribed');
+      this.subscriptionSubject.next(true);
+      this.addLog({
+        direction: 'status',
+        message: 'Subscribed to status topic',
+        topic: subscribeTopic,
+      });
+    });
+  }
+
+  private resolveTopics(deviceCode: string): { publishTopic: string; subscribeTopic: string } {
+    const normalizedCode = deviceCode.trim();
+
+    return {
+      publishTopic: `home/${normalizedCode}/led/control`,
+      subscribeTopic: `home/${normalizedCode}/led/status`,
+    };
   }
 }

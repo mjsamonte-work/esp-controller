@@ -25,7 +25,12 @@ describe('MqttService', () => {
     message$ = new Subject<{ topic: string; payload: Uint8Array }>();
     reconnect$ = new Subject<void>();
 
-    mockClient = jasmine.createSpyObj<MqttClient>('MqttClient', ['on', 'publish', 'subscribe']);
+    mockClient = jasmine.createSpyObj<MqttClient>('MqttClient', [
+      'on',
+      'publish',
+      'subscribe',
+      'unsubscribe',
+    ]);
 
     mockClient.on.and.callFake(((event: string, handler: (...args: unknown[]) => void) => {
       if (event === 'connect') {
@@ -85,12 +90,13 @@ describe('MqttService', () => {
       'wss://a0d47caf983d432e848a0047897b3ad3.s1.eu.hivemq.cloud:8884/mqtt',
       jasmine.objectContaining({
         username: 'hf5C405x',
-        password: '?rkG479!C}rW~98',
+        password: '?rkG479!C}rW~98Z',
       }),
     );
   });
 
   it('subscribes to the status topic after connecting', () => {
+    service.setActiveDevice('esp1');
     connect$.next();
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
@@ -101,7 +107,7 @@ describe('MqttService', () => {
   });
 
   it('publishes the ON payload to the control topic', () => {
-    service.publishState('ON');
+    service.publishState('esp1', 'ON');
 
     expect(mockClient.publish).toHaveBeenCalledWith(
       'home/esp1/led/control',
@@ -139,7 +145,7 @@ describe('MqttService', () => {
       return mockClient;
     }) as MqttClient['publish']);
 
-    service.publishState('OFF');
+    service.publishState('esp1', 'OFF');
 
     const logs = await firstValueFrom(service.logs$);
 
@@ -150,6 +156,21 @@ describe('MqttService', () => {
         payload: 'publish failed',
         topic: 'home/esp1/led/control',
       }),
+    );
+  });
+
+  it('re-subscribes when the active device changes', () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+    mockClient.subscribe.calls.reset();
+
+    service.setActiveDevice('esp2');
+
+    expect(mockClient.unsubscribe).toHaveBeenCalledWith('home/esp1/led/status');
+    expect(mockClient.subscribe).toHaveBeenCalledWith(
+      'home/esp2/led/status',
+      { qos: 0 },
+      jasmine.any(Function),
     );
   });
 });

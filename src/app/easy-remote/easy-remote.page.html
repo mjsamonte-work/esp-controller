@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <div class="toolbar-shell">
-      <a class="back-button" routerLink="/home" aria-label="Back to home">
+      <a class="back-button" routerLink="/devices" aria-label="Back to devices">
         <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
       </a>
       <ion-title>
@@ -18,6 +18,12 @@
   <div class="remote-shell">
     <div class="remote-stage">
       <section class="status-card">
+        <div>
+          <p class="section-label">Active Device</p>
+          <h2>{{ deviceCode }}</h2>
+          <p class="device-location">{{ deviceLocation }}</p>
+        </div>
+
         <div>
           <p class="section-label">Connection</p>
           <h2>Connection Status:</h2>

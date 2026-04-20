@@ -1,0 +1,82 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" routerLink="/home" aria-label="Back to home">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>DEVICES</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="devices-shell">
+    <div class="devices-stage">
+      <section class="devices-panel">
+        <div class="header-summary">
+          <ion-item lines="none" class="header-item">
+            <ion-label>
+              <h2 class="header-title">Select a device to control</h2>
+            </ion-label>
+            <ion-badge color="primary" class="device-count-badge">
+              {{ (devices$ | async)?.length ?? 0 }} device(s)
+            </ion-badge>
+          </ion-item>
+
+          <ion-button class="add-device-button" expand="block" (click)="createDevice()">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            ADD NEW DEVICE
+          </ion-button>
+
+          <p class="section-label list-section-label">List of devices</p>
+        </div>
+
+        <ion-list lines="none" *ngIf="(devices$ | async)?.length; else emptyState">
+          <ion-item-sliding *ngFor="let device of devices$ | async" class="device-slide">
+            <ion-item button detail="false" class="device-item" (click)="openDevice(device)">
+              <ion-label>
+                <strong>{{ device.code }}</strong>
+                <p>ID: {{ device.code }} | {{ device.location }}</p>
+              </ion-label>
+              <div slot="end" class="device-arrow">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </div>
+            </ion-item>
+
+            <ion-item-options side="end" class="device-item-options">
+              <ion-item-option color="primary" class="device-action action-view" (click)="openDevice(device)">
+                <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="medium" class="device-action action-edit" (click)="editDevice(device, $event)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="danger" class="device-action action-remove" (click)="removeDevice(device, $event)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        </ion-list>
+
+        <ng-template #emptyState>
+          <div class="empty-state-block">
+            <p class="empty-state">
+              No devices added yet. Tap Add New Device to start using Easy Remote.
+            </p>
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

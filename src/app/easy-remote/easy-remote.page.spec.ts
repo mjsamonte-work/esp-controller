@@ -1,19 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 
 import { EasyRemotePage } from './easy-remote.page';
+import { DeviceStoreService } from '../services/device-store.service';
 import { MqttService } from '../services/mqtt.service';
 
 describe('EasyRemotePage', () => {
   let component: EasyRemotePage;
   let fixture: ComponentFixture<EasyRemotePage>;
+  let deviceStore: jasmine.SpyObj<DeviceStoreService>;
   let mqttService: jasmine.SpyObj<MqttService>;
+  let router: Router;
 
   beforeEach(async () => {
     mqttService = jasmine.createSpyObj<MqttService>(
       'MqttService',
-      ['publishState'],
+      ['publishState', 'setActiveDevice'],
       {
         state$: of('subscribed'),
         logs$: of([
@@ -28,14 +31,41 @@ describe('EasyRemotePage', () => {
       },
     );
     mqttService.publishState.and.returnValue(Promise.resolve());
+    deviceStore = jasmine.createSpyObj<DeviceStoreService>('DeviceStoreService', [
+      'ready',
+      'findDevice',
+    ]);
+    deviceStore.ready.and.resolveTo();
+    deviceStore.findDevice.and.returnValue({
+      code: 'esp1',
+      location: 'Kitchen',
+    });
 
     await TestBed.configureTestingModule({
       imports: [EasyRemotePage],
-      providers: [provideRouter([]), { provide: MqttService, useValue: mqttService }],
+      providers: [
+        provideRouter([]),
+        { provide: MqttService, useValue: mqttService },
+        { provide: DeviceStoreService, useValue: deviceStore },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({
+                deviceCode: 'esp1',
+              }),
+            },
+          },
+        },
+      ],
     }).compileComponents();
 
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
     fixture = TestBed.createComponent(EasyRemotePage);
     component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
     fixture.detectChanges();
   });
 
@@ -57,7 +87,7 @@ describe('EasyRemotePage', () => {
     await component.confirmStateChange();
     await fixture.whenStable();
 
-    expect(mqttService.publishState).toHaveBeenCalledWith('ON');
+    expect(mqttService.publishState).toHaveBeenCalledWith('esp1', 'ON');
   });
 
   it('shows connected state when subscription is active', () => {
@@ -68,6 +98,12 @@ describe('EasyRemotePage', () => {
     expect(fixture.nativeElement.textContent).toContain('CONTACT US');
     expect(fixture.nativeElement.textContent).toContain('easyuansph@gmail.com');
     expect(fixture.nativeElement.textContent).toContain('09063071291');
+  });
+
+  it('shows the selected device details', () => {
+    expect(fixture.nativeElement.textContent).toContain('esp1');
+    expect(fixture.nativeElement.textContent).toContain('Kitchen');
+    expect(mqttService.setActiveDevice).toHaveBeenCalledWith('esp1');
   });
 
   it('disables the buttons while submitting and shows a success toast', async () => {
@@ -115,5 +151,21 @@ describe('EasyRemotePage', () => {
     expect(component.confirmAlertOpen).toBeFalse();
     expect(component.pendingState).toBeNull();
     expect(mqttService.publishState).not.toHaveBeenCalled();
+  });
+
+  it('redirects to devices when the route code is invalid', async () => {
+    deviceStore.findDevice.and.returnValue(undefined);
+
+    fixture = TestBed.createComponent(EasyRemotePage);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/devices'], {
+      state: {
+        message: 'Device not found. Please select a saved device.',
+      },
+    });
   });
 });
