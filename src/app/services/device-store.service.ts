@@ -30,12 +30,13 @@ export class DeviceStoreService {
     await this.ready();
 
     const normalizedDevice = {
+      name: device.name.trim(),
       code: device.code.trim(),
       location: device.location.trim(),
     };
 
-    if (!normalizedDevice.code || !normalizedDevice.location) {
-      throw new Error('Device code and location are required.');
+    if (!normalizedDevice.name || !normalizedDevice.code || !normalizedDevice.location) {
+      throw new Error('Device name, code, and location are required.');
     }
 
     if (this.findDevice(normalizedDevice.code)) {
@@ -47,14 +48,15 @@ export class DeviceStoreService {
     await this.persist(updatedDevices);
   }
 
-  async updateDevice(code: string, updates: Pick<Device, 'location'>): Promise<void> {
+  async updateDevice(code: string, updates: Pick<Device, 'name' | 'location'>): Promise<void> {
     await this.ready();
 
     const normalizedCode = code.trim();
+    const normalizedName = updates.name.trim();
     const normalizedLocation = updates.location.trim();
 
-    if (!normalizedCode || !normalizedLocation) {
-      throw new Error('Device code and location are required.');
+    if (!normalizedCode || !normalizedName || !normalizedLocation) {
+      throw new Error('Device name, code, and location are required.');
     }
 
     const existingDevice = this.findDevice(normalizedCode);
@@ -65,7 +67,7 @@ export class DeviceStoreService {
 
     const updatedDevices = this.devicesSubject.value.map((device) =>
       device.code.trim().toLowerCase() === normalizedCode.toLowerCase()
-        ? { ...device, location: normalizedLocation }
+        ? { ...device, name: normalizedName, location: normalizedLocation }
         : device,
     );
 
@@ -126,10 +128,11 @@ export class DeviceStoreService {
         parsedDevices
           .filter(this.isDevice)
           .map((device) => ({
+            name: device.name.trim() || device.code.trim(),
             code: device.code.trim(),
             location: device.location.trim(),
           }))
-          .filter((device) => device.code.length > 0 && device.location.length > 0),
+          .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
     } catch {
       this.devicesSubject.next([]);
@@ -149,6 +152,10 @@ export class DeviceStoreService {
     }
 
     const candidate = value as Partial<Device>;
-    return typeof candidate.code === 'string' && typeof candidate.location === 'string';
+    return (
+      typeof candidate.code === 'string' &&
+      typeof candidate.location === 'string' &&
+      (typeof candidate.name === 'string' || typeof candidate.name === 'undefined')
+    );
   }
 }

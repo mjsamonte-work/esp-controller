@@ -33,6 +33,16 @@
             <ion-text color="danger" *ngIf="hasCodeError">Device code is required.</ion-text>
 
             <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Device Name</ion-label>
+              <ion-input
+                formControlName="name"
+                placeholder="e.g. Smart Thermostat"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="hasNameError">Device name is required.</ion-text>
+
+            <ion-item lines="none" class="input-item">
               <ion-label position="stacked">Location</ion-label>
               <ion-input
                 formControlName="location"

@@ -18,6 +18,7 @@ describe('DevicesPage', () => {
       {
         devices$: of([
           {
+            name: 'Kitchen Lamp',
             code: 'esp1',
             location: 'Kitchen',
           },
@@ -42,8 +43,8 @@ describe('DevicesPage', () => {
 
   it('renders the device list and add action', () => {
     expect(fixture.nativeElement.textContent).toContain('Select a device to control');
-    expect(fixture.nativeElement.textContent).toContain('esp1');
-    expect(fixture.nativeElement.textContent).toContain('CREATE');
+    expect(fixture.nativeElement.textContent).toContain('Kitchen Lamp');
+    expect(fixture.nativeElement.textContent).toContain('Add New Device');
   });
 
   it('opens the create page from the create button', () => {
@@ -58,6 +59,7 @@ describe('DevicesPage', () => {
 
     component.editDevice(
       {
+        name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
       },
@@ -75,6 +77,7 @@ describe('DevicesPage', () => {
 
     await component.removeDevice(
       {
+        name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
       },

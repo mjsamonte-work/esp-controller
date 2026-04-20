@@ -38,7 +38,7 @@
           <ion-item-sliding *ngFor="let device of devices$ | async" class="device-slide">
             <ion-item button detail="false" class="device-item" (click)="openDevice(device)">
               <ion-label>
-                <strong>{{ device.code }}</strong>
+                <strong>{{ device.name }}</strong>
                 <p>ID: {{ device.code }} | {{ device.location }}</p>
               </ion-label>
               <div slot="end" class="device-arrow">

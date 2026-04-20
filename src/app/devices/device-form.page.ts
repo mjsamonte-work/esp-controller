@@ -47,6 +47,10 @@ import { DeviceStoreService } from '../services/device-store.service';
 })
 export class DeviceFormPage implements OnInit {
   readonly deviceForm = new FormGroup({
+    name: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     code: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required],
@@ -95,6 +99,7 @@ export class DeviceFormPage implements OnInit {
 
     this.isEditMode = true;
     this.deviceForm.setValue({
+      name: device.name,
       code: device.code,
       location: device.location,
     });
@@ -113,6 +118,7 @@ export class DeviceFormPage implements OnInit {
     try {
       if (this.isEditMode) {
         await this.deviceStore.updateDevice(rawValue.code, {
+          name: rawValue.name,
           location: rawValue.location,
         });
       } else {
@@ -148,6 +154,11 @@ export class DeviceFormPage implements OnInit {
 
   get hasCodeError(): boolean {
     const control = this.deviceForm.controls.code;
+    return control.invalid && (control.dirty || control.touched);
+  }
+
+  get hasNameError(): boolean {
+    const control = this.deviceForm.controls.name;
     return control.invalid && (control.dirty || control.touched);
   }
 

@@ -37,6 +37,7 @@ describe('EasyRemotePage', () => {
     ]);
     deviceStore.ready.and.resolveTo();
     deviceStore.findDevice.and.returnValue({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
@@ -101,6 +102,7 @@ describe('EasyRemotePage', () => {
   });
 
   it('shows the selected device details', () => {
+    expect(fixture.nativeElement.textContent).toContain('Kitchen Lamp');
     expect(fixture.nativeElement.textContent).toContain('esp1');
     expect(fixture.nativeElement.textContent).toContain('Kitchen');
     expect(mqttService.setActiveDevice).toHaveBeenCalledWith('esp1');

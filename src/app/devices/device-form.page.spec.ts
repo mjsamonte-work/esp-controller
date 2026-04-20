@@ -19,6 +19,7 @@ describe('DeviceFormPage', () => {
     deviceStore.addDevice.and.resolveTo();
     deviceStore.updateDevice.and.resolveTo();
     deviceStore.findDevice.and.returnValue({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
@@ -50,6 +51,7 @@ describe('DeviceFormPage', () => {
 
   it('creates a new device', async () => {
     component.deviceForm.setValue({
+      name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
     });
@@ -57,6 +59,7 @@ describe('DeviceFormPage', () => {
     await component.saveDevice();
 
     expect(deviceStore.addDevice).toHaveBeenCalledWith({
+      name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
     });
@@ -96,6 +99,7 @@ describe('DeviceFormPage', () => {
 
     expect(component.isEditMode).toBeTrue();
     expect(component.deviceForm.getRawValue()).toEqual({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });

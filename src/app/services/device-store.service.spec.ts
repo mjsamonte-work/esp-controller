@@ -19,12 +19,14 @@ describe('DeviceStoreService', () => {
   it('adds a device and persists it', async () => {
     await service.ready();
     await service.addDevice({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
 
     expect(service.devices).toEqual([
       {
+        name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
       },
@@ -38,12 +40,14 @@ describe('DeviceStoreService', () => {
   it('rejects duplicate device codes', async () => {
     await service.ready();
     await service.addDevice({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
 
     await expectAsync(
       service.addDevice({
+        name: 'Bedroom Lamp',
         code: 'ESP1',
         location: 'Bedroom',
       }),
@@ -56,6 +60,7 @@ describe('DeviceStoreService', () => {
     spyOn(Preferences, 'get').and.resolveTo({
       value: JSON.stringify([
         {
+          name: 'Garage Door',
           code: 'esp2',
           location: 'Garage',
         },
@@ -67,6 +72,7 @@ describe('DeviceStoreService', () => {
 
     expect(service.devices).toEqual([
       {
+        name: 'Garage Door',
         code: 'esp2',
         location: 'Garage',
       },
@@ -76,16 +82,19 @@ describe('DeviceStoreService', () => {
   it('updates the location without changing the device code', async () => {
     await service.ready();
     await service.addDevice({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
 
     await service.updateDevice('esp1', {
+      name: 'Kitchen Lamp v2',
       location: 'Bedroom',
     });
 
     expect(service.devices).toEqual([
       {
+        name: 'Kitchen Lamp v2',
         code: 'esp1',
         location: 'Bedroom',
       },
@@ -95,10 +104,12 @@ describe('DeviceStoreService', () => {
   it('removes a saved device', async () => {
     await service.ready();
     await service.addDevice({
+      name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
     });
     await service.addDevice({
+      name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
     });
@@ -107,6 +118,7 @@ describe('DeviceStoreService', () => {
 
     expect(service.devices).toEqual([
       {
+        name: 'Garage Door',
         code: 'esp2',
         location: 'Garage',
       },
