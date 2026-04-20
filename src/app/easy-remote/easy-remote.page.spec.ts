@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 
@@ -228,4 +228,30 @@ describe('EasyRemotePage', () => {
 
     expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
   });
+
+  it('automatically refreshes device status while the page is open', fakeAsync(() => {
+    mqttService.checkDeviceStatus.calls.reset();
+
+    tick(30000);
+
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+  }));
+
+  it('resets the auto-refresh timer after a manual status check', fakeAsync(() => {
+    mqttService.checkDeviceStatus.calls.reset();
+
+    const button = fixture.nativeElement.querySelectorAll('ion-button')[0] as HTMLIonButtonElement;
+    tick(15000);
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledTimes(1);
+
+    tick(29999);
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledTimes(1);
+
+    tick(1);
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledTimes(2);
+  }));
 });

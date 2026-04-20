@@ -21,6 +21,11 @@ export interface MqttLogEntry {
 
 export type DeviceHealthState = 'unknown' | 'checking' | 'online' | 'offline';
 
+interface DeviceStatusMessage {
+  state?: string;
+  timestamp?: string;
+}
+
 export type MqttConnectFn = (
   brokerUrl: string | IClientOptions,
   options?: IClientOptions,
@@ -57,6 +62,7 @@ export const MQTT_CONNECT = new InjectionToken<MqttConnectFn | null>(
 })
 export class MqttService implements OnDestroy {
   private readonly deviceCheckTimeoutMs = 5000;
+  private readonly statusMessageFreshnessMs = 15000;
   private readonly mqttConfig = environment.mqtt;
   private readonly websocketProtocol: MqttProtocol = 'wss';
   private readonly connectFn = inject(MQTT_CONNECT);
@@ -71,6 +77,7 @@ export class MqttService implements OnDestroy {
   private activeSubscribeTopics: string[] = [];
   private deviceCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pendingHealthCheck = false;
+  private lastDeviceCheckRequestedAt: number | null = null;
 
   readonly brokerHost = this.mqttConfig.host;
   readonly brokerPort = this.mqttConfig.websocketPort;
@@ -113,6 +120,7 @@ export class MqttService implements OnDestroy {
     this.deviceLastSeenSubject.next(null);
     this.deviceCheckInProgressSubject.next(false);
     this.pendingHealthCheck = false;
+    this.lastDeviceCheckRequestedAt = null;
     this.clearDeviceCheckTimeout();
 
     if (!this.client) {
@@ -194,6 +202,7 @@ export class MqttService implements OnDestroy {
     this.deviceHealthSubject.next('checking');
     this.deviceCheckInProgressSubject.next(true);
     this.pendingHealthCheck = true;
+    this.lastDeviceCheckRequestedAt = null;
     this.clearDeviceCheckTimeout();
 
     if (!this.client) {
@@ -369,9 +378,10 @@ export class MqttService implements OnDestroy {
     }
 
     const { controlTopic } = this.resolveTopics(deviceCode);
+    const requestTimestamp = new Date().toISOString();
     const payload = JSON.stringify({
       state: 'HEALTH',
-      timestamp: new Date().toISOString(),
+      timestamp: requestTimestamp,
     });
 
     return new Promise<void>((resolve, reject) => {
@@ -391,6 +401,7 @@ export class MqttService implements OnDestroy {
         }
 
         this.pendingHealthCheck = false;
+        this.lastDeviceCheckRequestedAt = Date.parse(requestTimestamp);
         this.armDeviceCheckTimeout(deviceCode);
         this.addLog({
           direction: 'sent',
@@ -414,6 +425,7 @@ export class MqttService implements OnDestroy {
       this.deviceHealthSubject.next('offline');
       this.deviceCheckInProgressSubject.next(false);
       this.pendingHealthCheck = false;
+      this.lastDeviceCheckRequestedAt = null;
       this.addLog({
         direction: 'status',
         message: 'Device status check timed out',
@@ -429,7 +441,7 @@ export class MqttService implements OnDestroy {
     }
   }
 
-  private handleIncomingMessage(topic: string, _payload: string): void {
+  private handleIncomingMessage(topic: string, payload: string): void {
     if (!this.activeDeviceCode) {
       return;
     }
@@ -440,11 +452,68 @@ export class MqttService implements OnDestroy {
       return;
     }
 
+    const parsedMessage = this.parseDeviceStatusMessage(payload);
+
+    if (!parsedMessage || !this.isFreshDeviceStatus(parsedMessage)) {
+      return;
+    }
+
     this.clearDeviceCheckTimeout();
     this.pendingHealthCheck = false;
+    this.lastDeviceCheckRequestedAt = null;
     this.deviceHealthSubject.next('online');
     this.deviceCheckInProgressSubject.next(false);
-    this.deviceLastSeenSubject.next(new Date().toISOString());
+    this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+  }
+
+  private parseDeviceStatusMessage(payload: string): DeviceStatusMessage | null {
+    try {
+      const parsed = JSON.parse(payload) as unknown;
+
+      if (!parsed || typeof parsed !== 'object') {
+        return null;
+      }
+
+      const message = parsed as DeviceStatusMessage;
+
+      return {
+        state: typeof message.state === 'string' ? message.state : undefined,
+        timestamp: typeof message.timestamp === 'string' ? message.timestamp : undefined,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private isFreshDeviceStatus(message: DeviceStatusMessage): boolean {
+    const normalizedState = message.state?.trim().toUpperCase();
+
+    if (!normalizedState || !['ONLINE', 'ON', 'OFF'].includes(normalizedState)) {
+      return false;
+    }
+
+    if (!message.timestamp) {
+      // Allow a plain ONLINE reply only while we are actively waiting for a health-check response.
+      return normalizedState === 'ONLINE' && this.lastDeviceCheckRequestedAt !== null;
+    }
+
+    const messageTimestamp = Date.parse(message.timestamp);
+
+    if (Number.isNaN(messageTimestamp)) {
+      return false;
+    }
+
+    const now = Date.now();
+
+    if (Math.abs(now - messageTimestamp) > this.statusMessageFreshnessMs) {
+      return false;
+    }
+
+    if (this.lastDeviceCheckRequestedAt && messageTimestamp + 1000 < this.lastDeviceCheckRequestedAt) {
+      return false;
+    }
+
+    return true;
   }
 
   private resolveTopics(

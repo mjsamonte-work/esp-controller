@@ -205,13 +205,45 @@ describe('MqttService', () => {
 
     message$.next({
       topic: 'home/esp1/led/status',
-      payload: new TextEncoder().encode('pong'),
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          state: 'ONLINE',
+        }),
+      ),
     });
 
     const state = await firstValueFrom(service.deviceHealth$);
 
     expect(state).toBe('online');
   });
+
+  it('ignores stale retained status messages on first load', fakeAsync(() => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+
+    void service.checkDeviceStatus('esp1');
+
+    message$.next({
+      topic: 'home/esp1/led/status',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          state: 'ON',
+          timestamp: '2026-04-01T00:00:00.000Z',
+        }),
+      ),
+    });
+
+    let state!: string;
+    service.deviceHealth$.subscribe((value) => {
+      state = value;
+    });
+
+    expect(state).toBe('checking');
+
+    tick(5001);
+
+    expect(state).toBe('offline');
+  }));
 
   it('marks the device offline after a health check timeout', fakeAsync(() => {
     service.setActiveDevice('esp1');

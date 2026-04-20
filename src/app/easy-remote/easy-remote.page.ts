@@ -41,6 +41,7 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
   ],
 })
 export class EasyRemotePage implements OnInit, OnDestroy {
+  private readonly autoRefreshIntervalMs = 30000;
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
@@ -67,6 +68,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   currentDeviceHealth: DeviceHealthState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
   private readonly subscriptions = new Subscription();
+  private autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private readonly mqttService: MqttService,
@@ -80,6 +82,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopAutoRefresh();
     this.subscriptions.unsubscribe();
   }
 
@@ -112,6 +115,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     this.device = device;
     this.mqttService.setActiveDevice(device.code);
     await this.refreshDeviceStatus();
+    this.startAutoRefresh();
   }
 
   requestStateChange(state: 'ON' | 'OFF'): void {
@@ -194,6 +198,8 @@ export class EasyRemotePage implements OnInit, OnDestroy {
       return;
     }
 
+    this.startAutoRefresh();
+
     try {
       await this.mqttService.checkDeviceStatus(this.device.code);
     } catch (error) {
@@ -247,5 +253,20 @@ export class EasyRemotePage implements OnInit, OnDestroy {
 
   private isServerConnected(state: string | null): boolean {
     return state === 'subscribed' || state === 'connected';
+  }
+
+  private startAutoRefresh(): void {
+    this.stopAutoRefresh();
+
+    this.autoRefreshIntervalId = setInterval(() => {
+      void this.refreshDeviceStatus();
+    }, this.autoRefreshIntervalMs);
+  }
+
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshIntervalId) {
+      clearInterval(this.autoRefreshIntervalId);
+      this.autoRefreshIntervalId = null;
+    }
   }
 }
