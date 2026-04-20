@@ -1,9 +1,14 @@
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { addOutline, saveOutline } from 'ionicons/icons';
+import {
+  AUTO_CHECK_INTERVAL_OPTIONS,
+  DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+  type AutoCheckIntervalSeconds,
+} from '../models/device.model';
 import {
   IonButton,
   IonCard,
@@ -14,6 +19,8 @@ import {
   IonInput,
   IonItem,
   IonLabel,
+  IonSelect,
+  IonSelectOption,
   IonText,
   IonTitle,
   IonToast,
@@ -28,6 +35,7 @@ import { DeviceStoreService } from '../services/device-store.service';
   styleUrls: ['./device-form.page.scss'],
   imports: [
     NgIf,
+    NgFor,
     ReactiveFormsModule,
     IonButton,
     IonCard,
@@ -38,6 +46,8 @@ import { DeviceStoreService } from '../services/device-store.service';
     IonInput,
     IonItem,
     IonLabel,
+    IonSelect,
+    IonSelectOption,
     IonText,
     IonTitle,
     IonToast,
@@ -46,6 +56,7 @@ import { DeviceStoreService } from '../services/device-store.service';
   ],
 })
 export class DeviceFormPage implements OnInit {
+  readonly autoCheckIntervalOptions = AUTO_CHECK_INTERVAL_OPTIONS;
   readonly deviceForm = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
@@ -59,6 +70,12 @@ export class DeviceFormPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    autoCheckIntervalSeconds: new FormControl<AutoCheckIntervalSeconds>(
+      DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+      {
+        nonNullable: true,
+      },
+    ),
   });
 
   isEditMode = false;
@@ -102,6 +119,7 @@ export class DeviceFormPage implements OnInit {
       name: device.name,
       code: device.code,
       location: device.location,
+      autoCheckIntervalSeconds: device.autoCheckIntervalSeconds,
     });
     this.deviceForm.controls.code.disable();
   }
@@ -120,6 +138,7 @@ export class DeviceFormPage implements OnInit {
         await this.deviceStore.updateDevice(rawValue.code, {
           name: rawValue.name,
           location: rawValue.location,
+          autoCheckIntervalSeconds: rawValue.autoCheckIntervalSeconds,
         });
       } else {
         await this.deviceStore.addDevice(rawValue);

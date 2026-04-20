@@ -2,7 +2,11 @@ import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
 import { BehaviorSubject } from 'rxjs';
 
-import { Device } from '../models/device.model';
+import {
+  AUTO_CHECK_INTERVAL_OPTIONS,
+  DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+  Device,
+} from '../models/device.model';
 
 @Injectable({
   providedIn: 'root',
@@ -33,6 +37,7 @@ export class DeviceStoreService {
       name: device.name.trim(),
       code: device.code.trim(),
       location: device.location.trim(),
+      autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
     };
 
     if (!normalizedDevice.name || !normalizedDevice.code || !normalizedDevice.location) {
@@ -48,12 +53,16 @@ export class DeviceStoreService {
     await this.persist(updatedDevices);
   }
 
-  async updateDevice(code: string, updates: Pick<Device, 'name' | 'location'>): Promise<void> {
+  async updateDevice(
+    code: string,
+    updates: Pick<Device, 'name' | 'location' | 'autoCheckIntervalSeconds'>,
+  ): Promise<void> {
     await this.ready();
 
     const normalizedCode = code.trim();
     const normalizedName = updates.name.trim();
     const normalizedLocation = updates.location.trim();
+    const normalizedInterval = this.normalizeAutoCheckInterval(updates.autoCheckIntervalSeconds);
 
     if (!normalizedCode || !normalizedName || !normalizedLocation) {
       throw new Error('Device name, code, and location are required.');
@@ -67,7 +76,38 @@ export class DeviceStoreService {
 
     const updatedDevices = this.devicesSubject.value.map((device) =>
       device.code.trim().toLowerCase() === normalizedCode.toLowerCase()
-        ? { ...device, name: normalizedName, location: normalizedLocation }
+        ? {
+            ...device,
+            name: normalizedName,
+            location: normalizedLocation,
+            autoCheckIntervalSeconds: normalizedInterval,
+          }
+        : device,
+    );
+
+    this.devicesSubject.next(updatedDevices);
+    await this.persist(updatedDevices);
+  }
+
+  async updateDeviceAutoCheckInterval(code: string, autoCheckIntervalSeconds: number): Promise<void> {
+    await this.ready();
+
+    const normalizedCode = code.trim();
+
+    if (!normalizedCode) {
+      throw new Error('Device code is required.');
+    }
+
+    const existingDevice = this.findDevice(normalizedCode);
+
+    if (!existingDevice) {
+      throw new Error('Device not found.');
+    }
+
+    const normalizedInterval = this.normalizeAutoCheckInterval(autoCheckIntervalSeconds);
+    const updatedDevices = this.devicesSubject.value.map((device) =>
+      device.code.trim().toLowerCase() === normalizedCode.toLowerCase()
+        ? { ...device, autoCheckIntervalSeconds: normalizedInterval }
         : device,
     );
 
@@ -131,6 +171,7 @@ export class DeviceStoreService {
             name: device.name.trim() || device.code.trim(),
             code: device.code.trim(),
             location: device.location.trim(),
+            autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
           }))
           .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
@@ -155,7 +196,15 @@ export class DeviceStoreService {
     return (
       typeof candidate.code === 'string' &&
       typeof candidate.location === 'string' &&
-      (typeof candidate.name === 'string' || typeof candidate.name === 'undefined')
+      (typeof candidate.name === 'string' || typeof candidate.name === 'undefined') &&
+      (typeof candidate.autoCheckIntervalSeconds === 'number'
+        || typeof candidate.autoCheckIntervalSeconds === 'undefined')
     );
+  }
+
+  private normalizeAutoCheckInterval(value: number | undefined): Device['autoCheckIntervalSeconds'] {
+    return AUTO_CHECK_INTERVAL_OPTIONS.includes(value as Device['autoCheckIntervalSeconds'])
+      ? (value as Device['autoCheckIntervalSeconds'])
+      : DEFAULT_AUTO_CHECK_INTERVAL_SECONDS;
   }
 }

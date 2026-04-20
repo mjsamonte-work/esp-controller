@@ -102,9 +102,6 @@ ion-title {
   background: rgba(255, 255, 255, 0.96);
   border-radius: 28px;
   box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
-}
-
-.status-card {
   display: grid;
   gap: 18px;
   padding: 22px 20px;
@@ -124,6 +121,18 @@ ion-title {
 .detail-item {
   display: grid;
   gap: 6px;
+}
+
+.interval-item {
+  --background: rgba(231, 239, 252, 0.55);
+  --border-radius: 18px;
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
+  --min-height: 76px;
+}
+
+.interval-item ion-label {
+  margin: 12px 0;
 }
 
 .status-row {
@@ -146,12 +155,6 @@ ion-title {
   letter-spacing: 0.08em;
 }
 
-.status-card h2,
-.info-item strong {
-  margin: 0;
-  color: var(--easy-text);
-}
-
 .device-meta {
   margin: 0;
   color: var(--easy-muted);
@@ -163,11 +166,6 @@ ion-title {
   color: var(--easy-muted);
   font-size: 0.9rem;
   line-height: 1.4;
-}
-
-.status-card h2 {
-  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
-  line-height: 1.1;
 }
 
 .status-pill {

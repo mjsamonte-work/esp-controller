@@ -18,7 +18,7 @@
   <div class="remote-shell">
     <div class="remote-stage">
       <section class="page-heading">
-        <h1>Device: {{ deviceName || deviceCode }}</h1>
+        <h1>{{ deviceName || deviceCode }}</h1>
       </section>
 
       <section class="status-card">
@@ -33,6 +33,23 @@
               <p class="device-meta">{{ deviceLocation }}</p>
             </div>
           </div>
+
+          <ion-item lines="none" class="interval-item">
+            <ion-label>
+              <p class="section-label">Auto Check</p>
+              <p class="status-help">Choose how often the app checks this device automatically.</p>
+            </ion-label>
+            <ion-select
+              interface="popover"
+              justify="end"
+              [value]="selectedAutoCheckIntervalSeconds"
+              (ionChange)="updateAutoCheckInterval($event)"
+            >
+              <ion-select-option *ngFor="let option of autoCheckIntervalOptions" [value]="option">
+                {{ option }} seconds
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
 
           <div class="status-row">
             <div class="status-copy">

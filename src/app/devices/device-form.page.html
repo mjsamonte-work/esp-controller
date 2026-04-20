@@ -52,6 +52,15 @@
             </ion-item>
             <ion-text color="danger" *ngIf="hasLocationError">Location is required.</ion-text>
 
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Auto Check Interval</ion-label>
+              <ion-select formControlName="autoCheckIntervalSeconds" interface="popover">
+                <ion-select-option *ngFor="let option of autoCheckIntervalOptions" [value]="option">
+                  {{ option }} seconds
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+
             <ion-button class="submit-button" expand="block" type="submit">
               <ion-icon
                 slot="start"

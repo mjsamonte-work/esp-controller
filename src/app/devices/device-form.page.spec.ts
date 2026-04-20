@@ -22,6 +22,7 @@ describe('DeviceFormPage', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 60,
     });
 
     await TestBed.configureTestingModule({
@@ -54,6 +55,7 @@ describe('DeviceFormPage', () => {
       name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
+      autoCheckIntervalSeconds: 120,
     });
 
     await component.saveDevice();
@@ -62,6 +64,7 @@ describe('DeviceFormPage', () => {
       name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
+      autoCheckIntervalSeconds: 120,
     });
     expect(router.navigate).toHaveBeenCalledWith(['/devices'], {
       state: {
@@ -102,6 +105,7 @@ describe('DeviceFormPage', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 60,
     });
     expect(component.deviceForm.controls.code.disabled).toBeTrue();
   });

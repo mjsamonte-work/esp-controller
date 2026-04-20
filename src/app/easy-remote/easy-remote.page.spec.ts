@@ -1,4 +1,4 @@
-import { fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { discardPeriodicTasks, fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 
@@ -43,12 +43,15 @@ describe('EasyRemotePage', () => {
     deviceStore = jasmine.createSpyObj<DeviceStoreService>('DeviceStoreService', [
       'ready',
       'findDevice',
+      'updateDeviceAutoCheckInterval',
     ]);
     deviceStore.ready.and.resolveTo();
+    deviceStore.updateDeviceAutoCheckInterval.and.resolveTo();
     deviceStore.findDevice.and.returnValue({
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
     });
 
     await TestBed.configureTestingModule({
@@ -87,6 +90,7 @@ describe('EasyRemotePage', () => {
     expect(fixture.nativeElement.textContent).toContain('TURN ON');
     expect(fixture.nativeElement.textContent).toContain('TURN OFF');
     expect(fixture.nativeElement.textContent).toContain('CHECK DEVICE STATUS');
+    expect(fixture.nativeElement.textContent).toContain('Auto Check');
   });
 
   it('publishes ON when the turn on button is clicked', async () => {
@@ -235,6 +239,8 @@ describe('EasyRemotePage', () => {
     tick(30000);
 
     expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+    component.ngOnDestroy();
+    discardPeriodicTasks();
   }));
 
   it('resets the auto-refresh timer after a manual status check', fakeAsync(() => {
@@ -253,5 +259,33 @@ describe('EasyRemotePage', () => {
 
     tick(1);
     expect(mqttService.checkDeviceStatus).toHaveBeenCalledTimes(2);
+    component.ngOnDestroy();
+    discardPeriodicTasks();
+  }));
+
+  it('saves the selected auto-check interval and uses it for polling', fakeAsync(() => {
+    component.selectedAutoCheckIntervalSeconds = 30;
+    fixture.detectChanges();
+
+    void component.updateAutoCheckInterval(
+      new CustomEvent('ionChange', {
+        detail: {
+          value: 120,
+        },
+      }),
+    );
+
+    expect(deviceStore.updateDeviceAutoCheckInterval).toHaveBeenCalledWith('esp1', 120);
+    expect(component.selectedAutoCheckIntervalSeconds).toBe(120);
+
+    mqttService.checkDeviceStatus.calls.reset();
+
+    tick(119999);
+    expect(mqttService.checkDeviceStatus).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+    component.ngOnDestroy();
+    discardPeriodicTasks();
   }));
 });

@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgIf } from '@angular/common';
+import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
@@ -10,13 +10,21 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonItem,
+  IonLabel,
+  IonSelect,
+  IonSelectOption,
   IonSpinner,
   IonToast,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 
-import { Device } from '../models/device.model';
+import {
+  AUTO_CHECK_INTERVAL_OPTIONS,
+  Device,
+  type AutoCheckIntervalSeconds,
+} from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
 import { DeviceHealthState, MqttConnectionState, MqttService } from '../services/mqtt.service';
 
@@ -27,12 +35,17 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
   imports: [
     AsyncPipe,
     NgClass,
+    NgFor,
     NgIf,
     IonAlert,
     IonButton,
     IonContent,
     IonHeader,
     IonIcon,
+    IonItem,
+    IonLabel,
+    IonSelect,
+    IonSelectOption,
     IonSpinner,
     IonToast,
     IonTitle,
@@ -41,7 +54,7 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
   ],
 })
 export class EasyRemotePage implements OnInit, OnDestroy {
-  private readonly autoRefreshIntervalMs = 30000;
+  readonly autoCheckIntervalOptions = AUTO_CHECK_INTERVAL_OPTIONS;
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
@@ -65,6 +78,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
   device: Device | null = null;
+  selectedAutoCheckIntervalSeconds: AutoCheckIntervalSeconds = AUTO_CHECK_INTERVAL_OPTIONS[0];
   currentDeviceHealth: DeviceHealthState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
   private readonly subscriptions = new Subscription();
@@ -113,6 +127,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     }
 
     this.device = device;
+    this.selectedAutoCheckIntervalSeconds = device.autoCheckIntervalSeconds;
     this.mqttService.setActiveDevice(device.code);
     await this.refreshDeviceStatus();
     this.startAutoRefresh();
@@ -208,6 +223,28 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     }
   }
 
+  async updateAutoCheckInterval(event: CustomEvent<{ value: number | string | null }>): Promise<void> {
+    const nextValue = Number(event.detail.value) as AutoCheckIntervalSeconds;
+
+    if (!this.device || !AUTO_CHECK_INTERVAL_OPTIONS.includes(nextValue)) {
+      return;
+    }
+
+    this.selectedAutoCheckIntervalSeconds = nextValue;
+    this.device = {
+      ...this.device,
+      autoCheckIntervalSeconds: nextValue,
+    };
+    this.startAutoRefresh();
+
+    try {
+      await this.deviceStore.updateDeviceAutoCheckInterval(this.device.code, nextValue);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to save auto-check interval.';
+      this.presentToast(message, 'danger');
+    }
+  }
+
   getServerStatusLabel(state: string | null): string {
     return this.isServerConnected(state) ? 'Connected' : 'Disconnected';
   }
@@ -260,7 +297,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
 
     this.autoRefreshIntervalId = setInterval(() => {
       void this.refreshDeviceStatus();
-    }, this.autoRefreshIntervalMs);
+    }, this.selectedAutoCheckIntervalSeconds * 1000);
   }
 
   private stopAutoRefresh(): void {

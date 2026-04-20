@@ -22,6 +22,7 @@ describe('DeviceStoreService', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 60,
     });
 
     expect(service.devices).toEqual([
@@ -29,6 +30,7 @@ describe('DeviceStoreService', () => {
         name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
+        autoCheckIntervalSeconds: 60,
       },
     ]);
     expect(Preferences.set).toHaveBeenCalledWith({
@@ -43,6 +45,7 @@ describe('DeviceStoreService', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
     });
 
     await expectAsync(
@@ -50,6 +53,7 @@ describe('DeviceStoreService', () => {
         name: 'Bedroom Lamp',
         code: 'ESP1',
         location: 'Bedroom',
+        autoCheckIntervalSeconds: 60,
       }),
     ).toBeRejectedWithError('A device with this code already exists.');
   });
@@ -63,6 +67,7 @@ describe('DeviceStoreService', () => {
           name: 'Garage Door',
           code: 'esp2',
           location: 'Garage',
+          autoCheckIntervalSeconds: 120,
         },
       ]),
     });
@@ -75,6 +80,7 @@ describe('DeviceStoreService', () => {
         name: 'Garage Door',
         code: 'esp2',
         location: 'Garage',
+        autoCheckIntervalSeconds: 120,
       },
     ]);
   });
@@ -85,11 +91,13 @@ describe('DeviceStoreService', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
     });
 
     await service.updateDevice('esp1', {
       name: 'Kitchen Lamp v2',
       location: 'Bedroom',
+      autoCheckIntervalSeconds: 240,
     });
 
     expect(service.devices).toEqual([
@@ -97,6 +105,28 @@ describe('DeviceStoreService', () => {
         name: 'Kitchen Lamp v2',
         code: 'esp1',
         location: 'Bedroom',
+        autoCheckIntervalSeconds: 240,
+      },
+    ]);
+  });
+
+  it('updates a device auto-check interval and persists it', async () => {
+    await service.ready();
+    await service.addDevice({
+      name: 'Kitchen Lamp',
+      code: 'esp1',
+      location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
+    });
+
+    await service.updateDeviceAutoCheckInterval('esp1', 240);
+
+    expect(service.devices).toEqual([
+      {
+        name: 'Kitchen Lamp',
+        code: 'esp1',
+        location: 'Kitchen',
+        autoCheckIntervalSeconds: 240,
       },
     ]);
   });
@@ -107,11 +137,13 @@ describe('DeviceStoreService', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
     });
     await service.addDevice({
       name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
+      autoCheckIntervalSeconds: 60,
     });
 
     await service.removeDevice('esp1');
@@ -121,6 +153,7 @@ describe('DeviceStoreService', () => {
         name: 'Garage Door',
         code: 'esp2',
         location: 'Garage',
+        autoCheckIntervalSeconds: 60,
       },
     ]);
     expect(Preferences.set).toHaveBeenCalledWith({

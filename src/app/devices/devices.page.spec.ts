@@ -21,6 +21,7 @@ describe('DevicesPage', () => {
             name: 'Kitchen Lamp',
             code: 'esp1',
             location: 'Kitchen',
+            autoCheckIntervalSeconds: 30,
           },
         ]),
       },
@@ -62,6 +63,7 @@ describe('DevicesPage', () => {
         name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
+        autoCheckIntervalSeconds: 30,
       },
       event,
     );
@@ -80,6 +82,7 @@ describe('DevicesPage', () => {
         name: 'Kitchen Lamp',
         code: 'esp1',
         location: 'Kitchen',
+        autoCheckIntervalSeconds: 30,
       },
       event,
     );
