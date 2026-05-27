@@ -90,12 +90,6 @@ describe('ComponentControlPage', () => {
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
   });
 
-  it('navigates to the component edit page', () => {
-    component.editComponent();
-
-    expect(router.navigate).toHaveBeenCalledWith(['/devices', 'esp1', 'components', 'relay-1', 'edit']);
-  });
-
   it('redirects away when the component cannot be found', async () => {
     deviceStore.findDevice.and.returnValue({
       name: 'Kitchen Lamp',

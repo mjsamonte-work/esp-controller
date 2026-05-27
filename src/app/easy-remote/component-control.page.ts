@@ -2,7 +2,7 @@ import { AsyncPipe, NgClass, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, createOutline } from 'ionicons/icons';
+import { chevronBackOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import {
   IonButton,
@@ -32,10 +32,10 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
   IonHeader,
   IonIcon,
     IonSpinner,
-    IonToast,
-    IonTitle,
-    IonToolbar,
-    RouterLink,
+  IonToast,
+  IonTitle,
+  IonToolbar,
+  RouterLink,
   ],
 })
 export class ComponentControlPage implements OnInit, OnDestroy {
@@ -64,7 +64,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     private readonly router: Router,
   ) {
     addIcons({
-      'create-outline': createOutline,
       'chevron-back-outline': chevronBackOutline,
     });
   }
@@ -130,14 +129,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
   closeToast(): void {
     this.toastOpen = false;
-  }
-
-  editComponent(): void {
-    if (!this.device || !this.component) {
-      return;
-    }
-
-    void this.router.navigate(['/devices', this.device.code, 'components', this.component.code, 'edit']);
   }
 
   get deviceCode(): string {
