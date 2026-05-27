@@ -12,8 +12,6 @@ export const environment = {
     path: '/mqtt',
     username: 'hf5C405x',
     password: '?rkG479!C}rW~98Z',
-    publishTopic: 'home/esp1/led/control',
-    subscribeTopic: 'home/esp1/led/status',
   },
 };
 

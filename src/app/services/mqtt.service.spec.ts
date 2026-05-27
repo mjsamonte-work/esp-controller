@@ -100,7 +100,7 @@ describe('MqttService', () => {
     connect$.next();
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      ['home/esp1/status'],
+      ['devices/esp1/event'],
       { qos: 0 },
       jasmine.any(Function),
     );
@@ -115,24 +115,24 @@ describe('MqttService', () => {
       jasmine.objectContaining<MqttLogEntry>({
         direction: 'sent',
         message: 'ON command sent',
-        topic: 'home/esp1/cmd',
+        topic: 'devices/esp1/command',
         payload: jasmine.stringMatching(/"state":"ON"/),
       }),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"target":"device"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"state":"ON"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"timestamp":"[^"]+"/),
       { qos: 0 },
       jasmine.any(Function),
@@ -148,24 +148,24 @@ describe('MqttService', () => {
       jasmine.objectContaining<MqttLogEntry>({
         direction: 'sent',
         message: 'OFF command sent for component',
-        topic: 'home/esp1/cmd',
+        topic: 'devices/esp1/command',
         payload: jasmine.stringMatching(/"component":"relay-1"/),
       }),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"target":"component"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"state":"OFF"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"component":"relay-1"/),
       { qos: 0 },
       jasmine.any(Function),
@@ -182,24 +182,24 @@ describe('MqttService', () => {
       jasmine.objectContaining<MqttLogEntry>({
         direction: 'sent',
         message: 'Requested device status',
-        topic: 'home/esp1/cmd',
+        topic: 'devices/esp1/command',
         payload: jasmine.stringMatching(/"state":"HEALTH"/),
       }),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"target":"device"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"state":"HEALTH"/),
       { qos: 0 },
       jasmine.any(Function),
     );
     expect(mockClient.publish).toHaveBeenCalledWith(
-      'home/esp1/cmd',
+      'devices/esp1/command',
       jasmine.stringMatching(/"timestamp":"[^"]+"/),
       { qos: 0 },
       jasmine.any(Function),
@@ -208,7 +208,7 @@ describe('MqttService', () => {
 
   it('adds a received log entry for incoming messages', async () => {
     message$.next({
-      topic: 'home/esp1/status',
+      topic: 'devices/esp1/event',
       payload: new TextEncoder().encode('online'),
     });
 
@@ -219,7 +219,7 @@ describe('MqttService', () => {
         direction: 'received',
         message: 'Message received',
         payload: 'online',
-        topic: 'home/esp1/status',
+        topic: 'devices/esp1/event',
       }),
     );
   });
@@ -243,7 +243,7 @@ describe('MqttService', () => {
         direction: 'error',
         message: 'Failed to publish OFF command',
         payload: 'publish failed',
-        topic: 'home/esp1/cmd',
+        topic: 'devices/esp1/command',
       }),
     );
   });
@@ -255,9 +255,9 @@ describe('MqttService', () => {
 
     service.setActiveDevice('esp2');
 
-    expect(mockClient.unsubscribe).toHaveBeenCalledWith('home/esp1/status');
+    expect(mockClient.unsubscribe).toHaveBeenCalledWith('devices/esp1/event');
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      ['home/esp2/status'],
+      ['devices/esp2/event'],
       { qos: 0 },
       jasmine.any(Function),
     );
@@ -269,7 +269,7 @@ describe('MqttService', () => {
     await service.checkDeviceStatus('esp1');
 
     message$.next({
-      topic: 'home/esp1/status',
+      topic: 'devices/esp1/event',
       payload: new TextEncoder().encode(
         JSON.stringify({
           state: 'ONLINE',
@@ -289,7 +289,7 @@ describe('MqttService', () => {
     void service.checkDeviceStatus('esp1');
 
     message$.next({
-      topic: 'home/esp1/status',
+      topic: 'devices/esp1/event',
       payload: new TextEncoder().encode(
         JSON.stringify({
           state: 'ON',

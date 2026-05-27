@@ -112,8 +112,8 @@ export class MqttService implements OnDestroy {
 
     const previousTopics = this.activeSubscribeTopics;
     this.activeDeviceCode = normalizedCode;
-    const { statusTopic } = this.resolveTopics(normalizedCode);
-    const nextTopics = [statusTopic];
+    const { eventTopic } = this.resolveTopics(normalizedCode);
+    const nextTopics = [eventTopic];
     this.activeSubscribeTopics = nextTopics;
     this.subscriptionSubject.next(false);
     this.deviceHealthSubject.next('unknown');
@@ -147,7 +147,7 @@ export class MqttService implements OnDestroy {
         direction: 'error',
         message: `Cannot publish ${state} command`,
         payload: 'MQTT client is unavailable',
-        topic: this.resolveTopics(deviceCode).controlTopic,
+        topic: this.resolveTopics(deviceCode).commandTopic,
       });
       return Promise.reject(new Error('MQTT client is unavailable'));
     }
@@ -160,23 +160,23 @@ export class MqttService implements OnDestroy {
 
     this.setActiveDevice(normalizedCode);
 
-    const { controlTopic } = this.resolveTopics(normalizedCode);
+    const { commandTopic } = this.resolveTopics(normalizedCode);
     const payload = JSON.stringify({
       target: 'device',
       state,
       timestamp: new Date().toISOString(),
     });
-    this.logOutgoingPublish(`Publishing ${state} command`, controlTopic, payload);
+    this.logOutgoingPublish(`Publishing ${state} command`, commandTopic, payload);
 
     return new Promise<void>((resolve, reject) => {
-      this.client?.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
+      this.client?.publish(commandTopic, payload, { qos: 0 }, (error?: Error) => {
         if (error) {
           this.stateSubject.next('error');
           this.addLog({
             direction: 'error',
             message: `Failed to publish ${state} command`,
             payload: error.message,
-            topic: controlTopic,
+            topic: commandTopic,
           });
           reject(error);
           return;
@@ -186,7 +186,7 @@ export class MqttService implements OnDestroy {
           direction: 'sent',
           message: `${state} command sent`,
           payload,
-          topic: controlTopic,
+          topic: commandTopic,
         });
         resolve();
       });
@@ -204,7 +204,7 @@ export class MqttService implements OnDestroy {
         direction: 'error',
         message: `Cannot publish ${state} command for component`,
         payload: 'MQTT client is unavailable',
-        topic: this.resolveTopics(deviceCode).controlTopic,
+        topic: this.resolveTopics(deviceCode).commandTopic,
       });
       return Promise.reject(new Error('MQTT client is unavailable'));
     }
@@ -222,7 +222,7 @@ export class MqttService implements OnDestroy {
 
     this.setActiveDevice(normalizedDeviceCode);
 
-    const { controlTopic } = this.resolveTopics(normalizedDeviceCode);
+    const { commandTopic } = this.resolveTopics(normalizedDeviceCode);
     const payload = JSON.stringify({
       target: 'component',
       state,
@@ -231,19 +231,19 @@ export class MqttService implements OnDestroy {
     });
     this.logOutgoingPublish(
       `Publishing ${state} command for component`,
-      controlTopic,
+      commandTopic,
       payload,
     );
 
     return new Promise<void>((resolve, reject) => {
-      this.client?.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
+      this.client?.publish(commandTopic, payload, { qos: 0 }, (error?: Error) => {
         if (error) {
           this.stateSubject.next('error');
           this.addLog({
             direction: 'error',
             message: `Failed to publish ${state} command for component`,
             payload: error.message,
-            topic: controlTopic,
+            topic: commandTopic,
           });
           reject(error);
           return;
@@ -253,7 +253,7 @@ export class MqttService implements OnDestroy {
           direction: 'sent',
           message: `${state} command sent for component`,
           payload,
-          topic: controlTopic,
+          topic: commandTopic,
         });
         resolve();
       });
@@ -427,8 +427,8 @@ export class MqttService implements OnDestroy {
     }
 
     const activeDeviceCode = this.activeDeviceCode;
-    const { statusTopic } = this.resolveTopics(activeDeviceCode);
-    const subscribeTopics = [statusTopic];
+    const { eventTopic } = this.resolveTopics(activeDeviceCode);
+    const subscribeTopics = [eventTopic];
 
     client.subscribe(subscribeTopics, { qos: 0 }, (error?: Error | null) => {
       if (error) {
@@ -467,17 +467,17 @@ export class MqttService implements OnDestroy {
       return Promise.reject(new Error('MQTT client is unavailable'));
     }
 
-    const { controlTopic } = this.resolveTopics(deviceCode);
+    const { commandTopic } = this.resolveTopics(deviceCode);
     const requestTimestamp = new Date().toISOString();
     const payload = JSON.stringify({
       target: 'device',
       state: 'HEALTH',
       timestamp: requestTimestamp,
     });
-    this.logOutgoingPublish('Requesting device status', controlTopic, payload);
+    this.logOutgoingPublish('Requesting device status', commandTopic, payload);
 
     return new Promise<void>((resolve, reject) => {
-      client.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
+      client.publish(commandTopic, payload, { qos: 0 }, (error?: Error) => {
         if (error) {
           this.deviceHealthSubject.next('offline');
           this.deviceCheckInProgressSubject.next(false);
@@ -486,7 +486,7 @@ export class MqttService implements OnDestroy {
             direction: 'error',
             message: 'Failed to request device status',
             payload: error.message,
-            topic: controlTopic,
+            topic: commandTopic,
           });
           reject(error);
           return;
@@ -499,7 +499,7 @@ export class MqttService implements OnDestroy {
           direction: 'sent',
           message: 'Requested device status',
           payload,
-          topic: controlTopic,
+          topic: commandTopic,
         });
         resolve();
       });
@@ -521,7 +521,7 @@ export class MqttService implements OnDestroy {
       this.addLog({
         direction: 'status',
         message: 'Device status check timed out',
-        topic: this.resolveTopics(deviceCode).statusTopic,
+        topic: this.resolveTopics(deviceCode).eventTopic,
       });
     }, this.deviceCheckTimeoutMs);
   }
@@ -538,9 +538,9 @@ export class MqttService implements OnDestroy {
       return;
     }
 
-    const { statusTopic } = this.resolveTopics(this.activeDeviceCode);
+    const { eventTopic } = this.resolveTopics(this.activeDeviceCode);
 
-    if (topic !== statusTopic) {
+    if (topic !== eventTopic) {
       return;
     }
 
@@ -611,14 +611,14 @@ export class MqttService implements OnDestroy {
   private resolveTopics(
     deviceCode: string,
   ): {
-    controlTopic: string;
-    statusTopic: string;
+    commandTopic: string;
+    eventTopic: string;
   } {
     const normalizedCode = deviceCode.trim();
 
     return {
-      controlTopic: `home/${normalizedCode}/cmd`,
-      statusTopic: `home/${normalizedCode}/status`,
+      commandTopic: `devices/${normalizedCode}/command`,
+      eventTopic: `devices/${normalizedCode}/event`,
     };
   }
 }

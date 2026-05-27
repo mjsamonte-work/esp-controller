@@ -33,7 +33,7 @@ describe('EasyRemotePage', () => {
             message: 'Message received',
             payload: '{"state":"ON"}',
             timestamp: '2026-04-01T00:00:00.000Z',
-            topic: 'home/esp1/status',
+            topic: 'devices/esp1/event',
           },
         ]),
       },
