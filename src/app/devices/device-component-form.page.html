@@ -1,0 +1,56 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" [routerLink]="['/devices', deviceCode, 'components']" aria-label="Back to components">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>{{ pageTitle }}</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="component-form-shell">
+    <div class="component-form-stage">
+      <ion-card class="form-card">
+        <ion-card-content>
+          <p class="section-label">{{ isEditing ? 'Edit Component' : 'New Component' }}</p>
+          <h2>{{ deviceName }}</h2>
+          <p class="status-help">
+            {{ isEditing ? 'Update this component, then return to the device details page.' : 'Add a component here, then return to the device details page.' }}
+          </p>
+          <p class="status-help">Existing components: {{ componentCount }}</p>
+
+          <div class="component-form">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Component Name</ion-label>
+              <ion-input [(ngModel)]="componentName" placeholder="e.g. Relay 1" autocomplete="off"></ion-input>
+            </ion-item>
+
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Component Code</ion-label>
+              <ion-input [(ngModel)]="componentCode" placeholder="e.g. relay-1" autocomplete="off"></ion-input>
+            </ion-item>
+
+            <ion-button class="submit-button" expand="block" type="button" (click)="saveComponent()">
+              <ion-icon slot="start" name="add-outline"></ion-icon>
+              {{ buttonLabel }}
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

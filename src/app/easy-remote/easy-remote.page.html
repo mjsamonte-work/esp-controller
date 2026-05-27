@@ -86,34 +86,64 @@
             </ng-container>
             <ng-template #checkStatusLabel>CHECK DEVICE STATUS</ng-template>
           </ion-button>
+
         </div>
       </section>
 
-      <section class="remote-actions">
-        <ion-button
-          class="action-button on-button"
-          expand="block"
-          [disabled]="isSubmitting || !canSendDeviceCommand"
-          (click)="requestStateChange('ON')"
-        >
-          <ng-container *ngIf="submittingState === 'ON'; else onLabel">
-            <ion-spinner name="crescent"></ion-spinner>
-            <span>LOADING...</span>
-          </ng-container>
-          <ng-template #onLabel>TURN ON</ng-template>
-        </ion-button>
-        <ion-button
-          class="action-button off-button"
-          expand="block"
-          [disabled]="isSubmitting || !canSendDeviceCommand"
-          (click)="requestStateChange('OFF')"
-        >
-          <ng-container *ngIf="submittingState === 'OFF'; else offLabel">
-            <ion-spinner name="crescent"></ion-spinner>
-            <span>LOADING...</span>
-          </ng-container>
-          <ng-template #offLabel>TURN OFF</ng-template>
-        </ion-button>
+      <section class="components-panel">
+        <div class="header-summary">
+          <ion-item lines="none" class="header-item">
+            <ion-label>
+              <h2 class="header-title">Components</h2>
+            </ion-label>
+            <ion-badge color="primary" class="device-count-badge">
+              {{ components.length }} component(s)
+            </ion-badge>
+          </ion-item>
+
+          <ion-button class="add-component-button" expand="block" (click)="openComponentForm()">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            ADD NEW COMPONENT
+          </ion-button>
+
+          <p class="section-label list-section-label">List of components</p>
+        </div>
+
+        <div class="components-list-card">
+          <ion-list lines="none" *ngIf="components.length; else noComponents">
+            <ion-item-sliding *ngFor="let component of components" class="component-slide">
+              <ion-item button detail="false" class="component-item" (click)="openComponent(component)">
+                <ion-label>
+                  <strong>{{ component.name }}</strong>
+                  <p>Code: {{ component.code }}</p>
+                </ion-label>
+                <div slot="end" class="component-arrow">
+                  <ion-icon name="chevron-forward-outline"></ion-icon>
+                </div>
+              </ion-item>
+
+              <ion-item-options side="end" class="component-item-options">
+                <ion-item-option color="primary" class="component-action action-view" (click)="openComponent(component)">
+                  <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
+                </ion-item-option>
+                <ion-item-option color="medium" class="component-action action-edit" (click)="editComponent(component)">
+                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                </ion-item-option>
+                <ion-item-option color="danger" class="component-action action-remove" (click)="removeComponent(component.code)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-item-option>
+              </ion-item-options>
+            </ion-item-sliding>
+          </ion-list>
+
+          <ng-template #noComponents>
+            <div class="empty-state-block">
+              <p class="component-empty">
+                No components added yet. Tap Add New Component to start using component control.
+              </p>
+            </div>
+          </ng-template>
+        </div>
       </section>
     </div>
   </div>
@@ -128,10 +158,10 @@
   ></ion-toast>
 
   <ion-alert
-    [isOpen]="confirmAlertOpen"
-    [header]="confirmHeader"
-    [message]="confirmMessage"
-    [buttons]="confirmButtons"
-    (didDismiss)="cancelStateChange()"
+    [isOpen]="componentRemoveConfirmOpen"
+    header="Remove Component"
+    message="Are you sure you want to remove this component?"
+    [buttons]="componentRemoveConfirmButtons"
+    (didDismiss)="cancelRemoveComponent()"
   ></ion-alert>
 </ion-content>

@@ -162,9 +162,11 @@ export class MqttService implements OnDestroy {
 
     const { controlTopic } = this.resolveTopics(normalizedCode);
     const payload = JSON.stringify({
+      target: 'device',
       state,
       timestamp: new Date().toISOString(),
     });
+    this.logOutgoingPublish(`Publishing ${state} command`, controlTopic, payload);
 
     return new Promise<void>((resolve, reject) => {
       this.client?.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
@@ -183,6 +185,73 @@ export class MqttService implements OnDestroy {
         this.addLog({
           direction: 'sent',
           message: `${state} command sent`,
+          payload,
+          topic: controlTopic,
+        });
+        resolve();
+      });
+    });
+  }
+
+  publishComponentState(
+    deviceCode: string,
+    componentCode: string,
+    state: 'ON' | 'OFF',
+  ): Promise<void> {
+    if (!this.client) {
+      this.stateSubject.next('error');
+      this.addLog({
+        direction: 'error',
+        message: `Cannot publish ${state} command for component`,
+        payload: 'MQTT client is unavailable',
+        topic: this.resolveTopics(deviceCode).controlTopic,
+      });
+      return Promise.reject(new Error('MQTT client is unavailable'));
+    }
+
+    const normalizedDeviceCode = deviceCode.trim();
+    const normalizedComponentCode = componentCode.trim();
+
+    if (!normalizedDeviceCode) {
+      return Promise.reject(new Error('Device code is required.'));
+    }
+
+    if (!normalizedComponentCode) {
+      return Promise.reject(new Error('Component code is required.'));
+    }
+
+    this.setActiveDevice(normalizedDeviceCode);
+
+    const { controlTopic } = this.resolveTopics(normalizedDeviceCode);
+    const payload = JSON.stringify({
+      target: 'component',
+      state,
+      component: normalizedComponentCode,
+      timestamp: new Date().toISOString(),
+    });
+    this.logOutgoingPublish(
+      `Publishing ${state} command for component`,
+      controlTopic,
+      payload,
+    );
+
+    return new Promise<void>((resolve, reject) => {
+      this.client?.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
+        if (error) {
+          this.stateSubject.next('error');
+          this.addLog({
+            direction: 'error',
+            message: `Failed to publish ${state} command for component`,
+            payload: error.message,
+            topic: controlTopic,
+          });
+          reject(error);
+          return;
+        }
+
+        this.addLog({
+          direction: 'sent',
+          message: `${state} command sent for component`,
           payload,
           topic: controlTopic,
         });
@@ -320,13 +389,34 @@ export class MqttService implements OnDestroy {
   }
 
   private addLog(entry: Omit<MqttLogEntry, 'timestamp'>): void {
-    this.logsSubject.next([
+    const timestamp = new Date().toISOString();
+    const logEntry: MqttLogEntry = {
+      ...entry,
+      timestamp,
+    };
+
+    console.log(
+      `[MQTT][${logEntry.direction}] ${logEntry.message}`,
       {
-        ...entry,
-        timestamp: new Date().toISOString(),
+        topic: logEntry.topic,
+        payload: logEntry.payload,
+        timestamp: logEntry.timestamp,
       },
+    );
+
+    this.logsSubject.next([
+      logEntry,
       ...this.logsSubject.value,
     ]);
+  }
+
+  private logOutgoingPublish(message: string, topic: string, payload: string): void {
+    this.addLog({
+      direction: 'status',
+      message,
+      payload,
+      topic,
+    });
   }
 
   private subscribeToActiveDevice(): void {
@@ -380,9 +470,11 @@ export class MqttService implements OnDestroy {
     const { controlTopic } = this.resolveTopics(deviceCode);
     const requestTimestamp = new Date().toISOString();
     const payload = JSON.stringify({
+      target: 'device',
       state: 'HEALTH',
       timestamp: requestTimestamp,
     });
+    this.logOutgoingPublish('Requesting device status', controlTopic, payload);
 
     return new Promise<void>((resolve, reject) => {
       client.publish(controlTopic, payload, { qos: 0 }, (error?: Error) => {
@@ -525,8 +617,8 @@ export class MqttService implements OnDestroy {
     const normalizedCode = deviceCode.trim();
 
     return {
-      controlTopic: `home/${normalizedCode}/led/control`,
-      statusTopic: `home/${normalizedCode}/led/status`,
+      controlTopic: `home/${normalizedCode}/cmd`,
+      statusTopic: `home/${normalizedCode}/status`,
     };
   }
 }

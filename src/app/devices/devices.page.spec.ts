@@ -22,6 +22,7 @@ describe('DevicesPage', () => {
             code: 'esp1',
             location: 'Kitchen',
             autoCheckIntervalSeconds: 30,
+            components: [],
           },
         ]),
       },
@@ -64,6 +65,7 @@ describe('DevicesPage', () => {
         code: 'esp1',
         location: 'Kitchen',
         autoCheckIntervalSeconds: 30,
+        components: [],
       },
       event,
     );
@@ -83,6 +85,7 @@ describe('DevicesPage', () => {
         code: 'esp1',
         location: 'Kitchen',
         autoCheckIntervalSeconds: 30,
+        components: [],
       },
       event,
     );

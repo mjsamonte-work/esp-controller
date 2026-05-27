@@ -31,6 +31,7 @@ describe('DeviceStoreService', () => {
         code: 'esp1',
         location: 'Kitchen',
         autoCheckIntervalSeconds: 60,
+        components: [],
       },
     ]);
     expect(Preferences.set).toHaveBeenCalledWith({
@@ -81,6 +82,7 @@ describe('DeviceStoreService', () => {
         code: 'esp2',
         location: 'Garage',
         autoCheckIntervalSeconds: 120,
+        components: [],
       },
     ]);
   });
@@ -106,6 +108,7 @@ describe('DeviceStoreService', () => {
         code: 'esp1',
         location: 'Bedroom',
         autoCheckIntervalSeconds: 240,
+        components: [],
       },
     ]);
   });
@@ -127,6 +130,39 @@ describe('DeviceStoreService', () => {
         code: 'esp1',
         location: 'Kitchen',
         autoCheckIntervalSeconds: 240,
+        components: [],
+      },
+    ]);
+  });
+
+  it('updates device components and persists them', async () => {
+    await service.ready();
+    await service.addDevice({
+      name: 'Kitchen Lamp',
+      code: 'esp1',
+      location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
+    });
+
+    await service.updateDeviceComponents('esp1', [
+      {
+        name: 'Relay 1',
+        code: 'relay-1',
+      },
+    ]);
+
+    expect(service.devices).toEqual([
+      {
+        name: 'Kitchen Lamp',
+        code: 'esp1',
+        location: 'Kitchen',
+        autoCheckIntervalSeconds: 30,
+        components: [
+          {
+            name: 'Relay 1',
+            code: 'relay-1',
+          },
+        ],
       },
     ]);
   });
@@ -154,6 +190,7 @@ describe('DeviceStoreService', () => {
         code: 'esp2',
         location: 'Garage',
         autoCheckIntervalSeconds: 60,
+        components: [],
       },
     ]);
     expect(Preferences.set).toHaveBeenCalledWith({

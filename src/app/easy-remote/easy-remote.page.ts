@@ -1,17 +1,22 @@
 import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, chevronForwardOutline, createOutline, eyeOutline, trashOutline } from 'ionicons/icons';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   IonAlert,
   IonButton,
+  IonBadge,
   IonContent,
   IonHeader,
   IonIcon,
   IonItem,
+  IonItemOption,
+  IonItemOptions,
+  IonItemSliding,
   IonLabel,
+  IonList,
   IonSelect,
   IonSelectOption,
   IonSpinner,
@@ -23,6 +28,7 @@ import {
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   Device,
+  type DeviceComponent,
   type AutoCheckIntervalSeconds,
 } from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
@@ -38,12 +44,17 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
     NgFor,
     NgIf,
     IonAlert,
+    IonBadge,
     IonButton,
     IonContent,
     IonHeader,
     IonIcon,
     IonItem,
+    IonItemOption,
+    IonItemOptions,
+    IonItemSliding,
     IonLabel,
+    IonList,
     IonSelect,
     IonSelectOption,
     IonSpinner,
@@ -77,7 +88,22 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   toastOpen = false;
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
+  componentRemoveConfirmOpen = false;
+  pendingRemoveComponentCode = '';
+  readonly componentRemoveConfirmButtons = [
+    {
+      text: 'Cancel',
+      role: 'cancel',
+      handler: () => this.cancelRemoveComponent(),
+    },
+    {
+      text: 'Remove',
+      role: 'destructive',
+      handler: () => void this.confirmRemoveComponent(),
+    },
+  ];
   device: Device | null = null;
+  private routeDeviceCode = '';
   selectedAutoCheckIntervalSeconds: AutoCheckIntervalSeconds = AUTO_CHECK_INTERVAL_OPTIONS[0];
   currentDeviceHealth: DeviceHealthState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
@@ -91,7 +117,12 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     private readonly router: Router,
   ) {
     addIcons({
+      'add-outline': addOutline,
       'chevron-back-outline': chevronBackOutline,
+      'chevron-forward-outline': chevronForwardOutline,
+      'create-outline': createOutline,
+      'eye-outline': eyeOutline,
+      'trash-outline': trashOutline,
     });
   }
 
@@ -114,23 +145,22 @@ export class EasyRemotePage implements OnInit, OnDestroy {
 
     await this.deviceStore.ready();
 
-    const deviceCode = this.route.snapshot.paramMap.get('deviceCode') ?? '';
-    const device = this.deviceStore.findDevice(deviceCode);
+    this.routeDeviceCode = this.route.snapshot.paramMap.get('deviceCode') ?? '';
 
-    if (!device) {
-      void this.router.navigate(['/devices'], {
-        state: {
-          message: 'Device not found. Please select a saved device.',
-        },
-      });
+    if (!(await this.loadDevice(true))) {
       return;
     }
 
-    this.device = device;
-    this.selectedAutoCheckIntervalSeconds = device.autoCheckIntervalSeconds;
-    this.mqttService.setActiveDevice(device.code);
     await this.refreshDeviceStatus();
     this.startAutoRefresh();
+  }
+
+  async ionViewWillEnter(): Promise<void> {
+    if (!this.routeDeviceCode) {
+      return;
+    }
+
+    await this.loadDevice(false);
   }
 
   requestStateChange(state: 'ON' | 'OFF'): void {
@@ -193,7 +223,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   }
 
   get deviceCode(): string {
-    return this.device?.code ?? '';
+    return this.device?.code ?? this.routeDeviceCode;
   }
 
   get deviceName(): string {
@@ -204,8 +234,12 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     return this.device?.location ?? '';
   }
 
+  get components(): DeviceComponent[] {
+    return this.device?.components ?? [];
+  }
+
   get canSendDeviceCommand(): boolean {
-    return this.currentDeviceHealth === 'online' && this.isServerConnected(this.currentConnectionState);
+    return this.isServerConnected(this.currentConnectionState);
   }
 
   async refreshDeviceStatus(): Promise<void> {
@@ -243,6 +277,74 @@ export class EasyRemotePage implements OnInit, OnDestroy {
       const message = error instanceof Error ? error.message : 'Unable to save auto-check interval.';
       this.presentToast(message, 'danger');
     }
+  }
+
+  openComponent(component: DeviceComponent): void {
+    if (!this.device) {
+      return;
+    }
+
+    void this.router.navigate(['/easy-remote', this.device.code, 'components', component.code]);
+  }
+
+  editComponent(component: DeviceComponent): void {
+    if (!this.device) {
+      return;
+    }
+
+    void this.router.navigate(['/devices', this.device.code, 'components', component.code, 'edit']);
+  }
+
+  removeComponent(componentCode: string): void {
+    if (!this.deviceCode) {
+      return;
+    }
+
+    const normalizedCode = componentCode.trim();
+
+    if (!normalizedCode) {
+      return;
+    }
+
+    this.pendingRemoveComponentCode = normalizedCode;
+    this.componentRemoveConfirmOpen = true;
+  }
+
+  cancelRemoveComponent(): void {
+    this.componentRemoveConfirmOpen = false;
+    this.pendingRemoveComponentCode = '';
+  }
+
+  async confirmRemoveComponent(): Promise<void> {
+    if (!this.device || !this.pendingRemoveComponentCode) {
+      return;
+    }
+
+    const normalizedCode = this.pendingRemoveComponentCode.trim().toLowerCase();
+    const nextComponents = this.components.filter(
+      (component) => component.code.trim().toLowerCase() !== normalizedCode,
+    );
+
+    try {
+      await this.deviceStore.updateDeviceComponents(this.device.code, nextComponents);
+      this.device = {
+        ...this.device,
+        components: nextComponents,
+      };
+      this.presentToast('Component removed successfully.', 'success');
+      this.cancelRemoveComponent();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to remove the component.';
+      this.presentToast(message, 'danger');
+    }
+  }
+
+  openComponentForm(): void {
+    if (!this.device) {
+      return;
+    }
+
+    void this.router.navigate(['/devices', this.device.code, 'components', 'new']);
   }
 
   getServerStatusLabel(state: string | null): string {
@@ -305,5 +407,26 @@ export class EasyRemotePage implements OnInit, OnDestroy {
       clearInterval(this.autoRefreshIntervalId);
       this.autoRefreshIntervalId = null;
     }
+  }
+
+  private async loadDevice(redirectOnMissing: boolean): Promise<boolean> {
+    const device = this.deviceStore.findDevice(this.routeDeviceCode);
+
+    if (!device) {
+      if (redirectOnMissing) {
+        void this.router.navigate(['/devices'], {
+          state: {
+            message: 'Device not found. Please select a saved device.',
+          },
+        });
+      }
+
+      return false;
+    }
+
+    this.device = device;
+    this.selectedAutoCheckIntervalSeconds = device.autoCheckIntervalSeconds;
+    this.mqttService.setActiveDevice(device.code);
+    return true;
   }
 }

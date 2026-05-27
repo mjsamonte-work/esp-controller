@@ -31,3 +31,715 @@ ion-app,
 ion-content {
   color-scheme: light;
 }
+
+:root {
+  --easy-blue: #0d57b8;
+  --easy-blue-dark: #09489d;
+  --easy-blue-soft: #e7effc;
+  --easy-red: #e31d28;
+  --easy-red-soft: #fbdcdf;
+  --easy-text: #2f3440;
+  --easy-muted: #667085;
+  --easy-surface: #ffffff;
+  --easy-background-top: #eef2f7;
+  --easy-background-bottom: #f8fbff;
+}
+
+ion-toolbar {
+  --background: rgba(255, 255, 255, 0.94);
+  --border-width: 0;
+  --min-height: 88px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+}
+
+ion-content {
+  --background: linear-gradient(180deg, var(--easy-background-top) 0%, var(--easy-background-bottom) 100%);
+}
+
+.toolbar-shell {
+  display: grid;
+  grid-template-columns: 40px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+}
+
+.back-button {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--easy-text);
+  text-decoration: none;
+  border-radius: 12px;
+}
+
+.back-button ion-icon {
+  font-size: 1.4rem;
+}
+
+ion-title {
+  color: var(--easy-blue);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.brand-y {
+  color: var(--easy-red);
+}
+
+.logo-slot {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.devices-shell,
+.device-form-shell,
+.components-shell,
+.component-form-shell,
+.remote-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.devices-stage,
+.device-form-stage,
+.components-stage,
+.component-form-stage,
+.remote-stage {
+  flex: 1;
+  padding: 24px 20px;
+}
+
+.devices-panel,
+.device-form-stage > *,
+.components-stage > *,
+.component-form-stage > *,
+.remote-stage {
+  display: flex;
+  flex-direction: column;
+}
+
+.devices-panel,
+.remote-stage {
+  gap: 20px;
+}
+
+.header-summary,
+.device-form,
+.component-form,
+.status-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.header-title {
+  margin: 0;
+  color: var(--easy-text);
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.header-item {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-end: 0;
+  --min-height: auto;
+}
+
+.device-count-badge {
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  --background: rgba(13, 87, 184, 0.12);
+  --color: var(--easy-blue);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.section-label {
+  margin: 0 0 8px;
+  color: var(--easy-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-help,
+.empty-state,
+.component-empty {
+  margin: 0;
+  color: var(--easy-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.device-meta {
+  margin: 0;
+  color: var(--easy-text);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.form-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28px;
+  box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
+}
+
+.form-card ion-card-content {
+  padding: 22px 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.form-card h2,
+.page-heading h1,
+.component-form-card h2 {
+  margin: 0;
+  color: var(--easy-text);
+  line-height: 1.2;
+}
+
+.form-card h2,
+.component-form-card h2 {
+  font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+}
+
+.page-heading h1 {
+  font-size: clamp(1.8rem, 6vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.input-item {
+  --background: var(--easy-blue-soft);
+  --border-radius: 18px;
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
+}
+
+.submit-button {
+  --border-radius: 16px;
+  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
+  --background-hover: #1557ab;
+  --background-activated: var(--easy-blue-dark);
+  --box-shadow: none;
+  --color: #ffffff;
+  height: 52px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.add-device-button,
+.add-component-button {
+  --border-radius: 18px;
+  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
+  --background-hover: #1557ab;
+  --background-activated: var(--easy-blue-dark);
+  --box-shadow: none;
+  --color: #ffffff;
+  height: 68px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.add-device-button::part(native),
+.add-component-button::part(native) {
+  padding-inline: 18px;
+}
+
+.add-device-button ion-icon,
+.add-component-button ion-icon {
+  font-size: 1.55rem;
+  color: #ffffff;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-connected {
+  background: rgba(24, 157, 74, 0.14);
+  color: #148544;
+}
+
+.status-disconnected {
+  background: var(--easy-red-soft);
+  color: var(--easy-red);
+}
+
+.status-pending {
+  background: #fff4d7;
+  color: #976800;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.status-copy,
+.detail-item {
+  display: grid;
+  gap: 4px;
+}
+
+.status-check-button {
+  --border-color: rgba(13, 87, 184, 0.22);
+  --color: var(--easy-blue);
+  --border-radius: 18px;
+  min-height: 52px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.status-check-button::part(native) {
+  gap: 10px;
+}
+
+.empty-state-block {
+  padding: 18px 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 20px rgba(48, 64, 96, 0.08);
+}
+
+.components-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.components-list-card {
+  padding: 4px 0 0;
+}
+
+.component-slide + .component-slide {
+  margin-top: 12px;
+}
+
+.component-item-options {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.component-item-options .component-action {
+  --min-width: 76px;
+}
+
+.control-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.control-stage {
+  flex: 1;
+  padding: 24px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.component-hero {
+  padding: 8px 4px 2px;
+}
+
+.component-hero h1 {
+  margin: 6px 0 8px;
+  color: var(--easy-text);
+  font-size: clamp(1.8rem, 6vw, 2.35rem);
+  line-height: 1.05;
+}
+
+.component-edit-button {
+  margin-top: 14px;
+  --border-radius: 18px;
+  --border-color: rgba(13, 87, 184, 0.25);
+  --color: var(--easy-blue);
+  --background: rgba(13, 87, 184, 0.05);
+  --background-activated: rgba(13, 87, 184, 0.1);
+  --background-hover: rgba(13, 87, 184, 0.08);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  height: 52px;
+}
+
+.component-edit-button::part(native) {
+  gap: 10px;
+}
+
+.component-control-card,
+.action-panel {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 28px;
+  box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
+}
+
+.component-control-card {
+  padding: 22px 18px;
+  display: grid;
+  gap: 18px;
+}
+
+.component-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.component-list-card .component-item {
+  margin: 0;
+}
+
+.component-status-row {
+  padding-top: 4px;
+  border-top: 1px solid rgba(13, 87, 184, 0.1);
+}
+
+.action-panel {
+  padding: 20px 18px 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.action-panel-header {
+  display: grid;
+  gap: 4px;
+}
+
+.component-list {
+  display: grid;
+  gap: 10px;
+}
+
+.component-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.manage-button {
+  --color: var(--easy-blue);
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.component-chip,
+.component-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+}
+
+.component-chip {
+  background: rgba(13, 87, 184, 0.06);
+}
+
+.component-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.component-action-button {
+  width: 42px;
+  height: 42px;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-radius: 999px;
+}
+
+.component-action-button::part(native) {
+  padding: 0;
+}
+
+.component-action-button ion-icon {
+  font-size: 1.15rem;
+}
+
+.device-item,
+.component-item {
+  --background: #ffffff;
+  --padding-start: 18px;
+  --padding-end: 18px;
+  --inner-padding-end: 0;
+  --min-height: 78px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.device-item::part(native),
+.component-item::part(native) {
+  border-radius: 20px;
+  box-shadow: 0 10px 20px rgba(48, 64, 96, 0.08);
+}
+
+.device-item strong,
+.component-item strong {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.device-item p,
+.component-item p {
+  margin: 6px 0 0;
+  color: var(--easy-muted);
+  font-size: 0.95rem;
+}
+
+.device-arrow,
+.component-arrow {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f2f4f8;
+  color: #7a8596;
+  font-size: 1.55rem;
+  flex-shrink: 0;
+}
+
+.component-row {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  background: #ffffff;
+  box-shadow: 0 10px 20px rgba(48, 64, 96, 0.08);
+  color: inherit;
+}
+
+.component-chip strong,
+.component-copy strong {
+  display: block;
+  color: var(--easy-text);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.component-chip p,
+.component-copy p {
+  margin: 4px 0 0;
+  color: var(--easy-muted);
+  font-size: 0.88rem;
+}
+
+.component-action {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(13, 87, 184, 0.12);
+  color: var(--easy-blue);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.remove-button {
+  --color: var(--easy-red);
+  margin: 0;
+}
+
+.remote-actions {
+  display: grid;
+  gap: 14px;
+}
+
+.control-stage .remote-actions {
+  margin-top: 0;
+}
+
+.action-button {
+  --border-radius: 20px;
+  --box-shadow: 0 18px 28px rgba(13, 87, 184, 0.18);
+  height: 68px;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.list-section-label {
+  margin-top: 4px;
+}
+
+.action-button::part(native) {
+  padding-inline: 24px;
+  gap: 10px;
+}
+
+.action-button ion-spinner {
+  width: 18px;
+  height: 18px;
+}
+
+.on-button {
+  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
+  --background-activated: var(--easy-blue-dark);
+  --background-hover: #1557ab;
+}
+
+.off-button {
+  --background: linear-gradient(180deg, #f22831 0%, #d91620 100%);
+  --background-activated: #c8141e;
+  --background-hover: #db1b24;
+  --box-shadow: 0 18px 28px rgba(227, 29, 40, 0.22);
+}
+
+.home-shell {
+  min-height: 100%;
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 28px 24px 12px;
+}
+
+.tagline-band {
+  padding: 12px 20px;
+  text-align: center;
+  background: rgba(217, 227, 240, 0.82);
+  border-top: 1px solid rgba(13, 87, 184, 0.08);
+  border-bottom: 1px solid rgba(13, 87, 184, 0.08);
+}
+
+.tagline-band p {
+  margin: 0;
+  color: var(--easy-muted);
+  font-size: clamp(1rem, 3.2vw, 1.2rem);
+  font-style: italic;
+}
+
+.welcome-card {
+  width: 100%;
+  max-width: 520px;
+  margin: 0;
+  text-align: center;
+  background: var(--easy-surface);
+  border-radius: 30px;
+  box-shadow: 0 22px 42px rgba(39, 67, 114, 0.12);
+  position: relative;
+}
+
+.welcome-card ion-card-content {
+  padding: 28px 22px;
+}
+
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-top: 6px solid var(--easy-blue);
+  border-radius: 30px;
+  pointer-events: none;
+}
+
+.welcome-card p {
+  margin: 0;
+  color: var(--easy-text);
+  font-size: clamp(1.2rem, 3.5vw, 1.55rem);
+  line-height: 1.4;
+}
+
+.welcome-card p + p {
+  margin-top: 16px;
+}
+
+.remote-button {
+  width: 100%;
+  max-width: 520px;
+  margin: 28px 0 0;
+  --border-radius: 999px;
+  --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
+  --background-hover: #1557ab;
+  --background-activated: var(--easy-blue-dark);
+  --box-shadow: 0 24px 40px rgba(13, 87, 184, 0.22);
+  height: 64px;
+  font-size: clamp(1.25rem, 3.5vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.remote-button::part(native) {
+  padding-inline: 20px;
+}
+
+@media (max-width: 480px) {
+  ion-toolbar {
+    --min-height: 80px;
+  }
+
+  ion-title {
+    font-size: 1.35rem;
+  }
+
+  .toolbar-shell {
+    grid-template-columns: 36px 1fr 48px;
+    gap: 8px;
+  }
+
+  .back-button,
+  .logo-slot {
+    width: 48px;
+    height: 48px;
+  }
+
+  .devices-stage,
+  .device-form-stage,
+  .components-stage,
+  .component-form-stage,
+  .remote-stage {
+    padding: 18px 16px 24px;
+  }
+
+  .status-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-pill {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -1,0 +1,109 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" [routerLink]="['/easy-remote', deviceCode]" aria-label="Back to device">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>
+        EAS<span class="brand-y">Y</span> PH
+      </ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="control-shell">
+    <div class="control-stage">
+      <section class="component-hero">
+        <p class="section-label">Component Control</p>
+        <h1>{{ componentName || componentCode }}</h1>
+        <p class="status-help">
+          Send a dedicated command to this component instead of the whole device.
+        </p>
+        <ion-button class="component-edit-button" fill="outline" expand="block" type="button" (click)="editComponent()">
+          <ion-icon slot="start" name="create-outline"></ion-icon>
+          EDIT COMPONENT
+        </ion-button>
+      </section>
+
+      <section class="component-control-card">
+        <div class="component-meta-grid">
+          <div class="detail-item">
+            <p class="section-label">Device</p>
+            <p class="device-meta">{{ deviceName || deviceCode }}</p>
+          </div>
+          <div class="detail-item">
+            <p class="section-label">Location</p>
+            <p class="device-meta">{{ deviceLocation }}</p>
+          </div>
+          <div class="detail-item">
+            <p class="section-label">Component Code</p>
+            <p class="device-meta">{{ componentCode }}</p>
+          </div>
+          <div class="detail-item">
+            <p class="section-label">Connection</p>
+            <div class="status-pill" [ngClass]="getServerStatusClass(connectionState$ | async)">
+              {{ getServerStatusLabel(connectionState$ | async) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="status-row component-status-row">
+          <div class="status-copy">
+            <p class="section-label">Device Status</p>
+            <p class="status-help">The device must be online before the component command can be sent.</p>
+          </div>
+          <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
+            {{ getDeviceStatusLabel(deviceHealth$ | async) }}
+          </div>
+        </div>
+      </section>
+
+      <section class="action-panel">
+        <div class="action-panel-header">
+          <p class="section-label">Actions</p>
+          <p class="status-help">Choose the component state you want to send.</p>
+        </div>
+
+        <div class="remote-actions">
+          <ion-button
+            class="action-button on-button"
+            expand="block"
+            [disabled]="isSubmitting || !canSendDeviceCommand"
+            (click)="sendState('ON')"
+          >
+            <ng-container *ngIf="submittingState === 'ON'; else onLabel">
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>TURNING ON...</span>
+            </ng-container>
+            <ng-template #onLabel>TURN ON</ng-template>
+          </ion-button>
+          <ion-button
+            class="action-button off-button"
+            expand="block"
+            [disabled]="isSubmitting || !canSendDeviceCommand"
+            (click)="sendState('OFF')"
+          >
+            <ng-container *ngIf="submittingState === 'OFF'; else offLabel">
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>TURNING OFF...</span>
+            </ng-container>
+            <ng-template #offLabel>TURN OFF</ng-template>
+          </ion-button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

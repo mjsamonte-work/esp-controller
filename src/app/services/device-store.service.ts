@@ -6,6 +6,7 @@ import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
   Device,
+  type DeviceComponent,
 } from '../models/device.model';
 
 @Injectable({
@@ -38,6 +39,7 @@ export class DeviceStoreService {
       code: device.code.trim(),
       location: device.location.trim(),
       autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
+      components: this.normalizeComponents(device.components),
     };
 
     if (!normalizedDevice.name || !normalizedDevice.code || !normalizedDevice.location) {
@@ -82,6 +84,32 @@ export class DeviceStoreService {
             location: normalizedLocation,
             autoCheckIntervalSeconds: normalizedInterval,
           }
+        : device,
+    );
+
+    this.devicesSubject.next(updatedDevices);
+    await this.persist(updatedDevices);
+  }
+
+  async updateDeviceComponents(code: string, components: DeviceComponent[]): Promise<void> {
+    await this.ready();
+
+    const normalizedCode = code.trim();
+
+    if (!normalizedCode) {
+      throw new Error('Device code is required.');
+    }
+
+    const existingDevice = this.findDevice(normalizedCode);
+
+    if (!existingDevice) {
+      throw new Error('Device not found.');
+    }
+
+    const normalizedComponents = this.normalizeComponents(components);
+    const updatedDevices = this.devicesSubject.value.map((device) =>
+      device.code.trim().toLowerCase() === normalizedCode.toLowerCase()
+        ? { ...device, components: normalizedComponents }
         : device,
     );
 
@@ -172,6 +200,7 @@ export class DeviceStoreService {
             code: device.code.trim(),
             location: device.location.trim(),
             autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
+            components: this.normalizeComponents(device.components),
           }))
           .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
@@ -198,7 +227,8 @@ export class DeviceStoreService {
       typeof candidate.location === 'string' &&
       (typeof candidate.name === 'string' || typeof candidate.name === 'undefined') &&
       (typeof candidate.autoCheckIntervalSeconds === 'number'
-        || typeof candidate.autoCheckIntervalSeconds === 'undefined')
+        || typeof candidate.autoCheckIntervalSeconds === 'undefined') &&
+      (Array.isArray(candidate.components) || typeof candidate.components === 'undefined')
     );
   }
 
@@ -206,5 +236,37 @@ export class DeviceStoreService {
     return AUTO_CHECK_INTERVAL_OPTIONS.includes(value as Device['autoCheckIntervalSeconds'])
       ? (value as Device['autoCheckIntervalSeconds'])
       : DEFAULT_AUTO_CHECK_INTERVAL_SECONDS;
+  }
+
+  private normalizeComponents(components: DeviceComponent[] | undefined): DeviceComponent[] {
+    if (!Array.isArray(components)) {
+      return [];
+    }
+
+    const seenCodes = new Set<string>();
+
+    return components
+      .filter((component): component is DeviceComponent => {
+        return (
+          !!component &&
+          typeof component.name === 'string' &&
+          typeof component.code === 'string'
+        );
+      })
+      .map((component) => ({
+        name: component.name.trim(),
+        code: component.code.trim(),
+      }))
+      .filter((component) => component.name.length > 0 && component.code.length > 0)
+      .filter((component) => {
+        const key = component.code.toLowerCase();
+
+        if (seenCodes.has(key)) {
+          return false;
+        }
+
+        seenCodes.add(key);
+        return true;
+      });
   }
 }

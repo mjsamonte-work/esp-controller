@@ -1,0 +1,88 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" [routerLink]="['/easy-remote', deviceCode]" aria-label="Back to device">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>COMPONENTS</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="components-shell">
+    <div class="components-stage">
+      <section class="components-panel">
+        <div class="header-summary">
+          <ion-item lines="none" class="header-item">
+            <ion-label>
+              <h2 class="header-title">Select a component to control</h2>
+            </ion-label>
+            <ion-badge color="primary" class="device-count-badge">
+              {{ components.length }} component(s)
+            </ion-badge>
+          </ion-item>
+
+          <ion-button class="add-component-button" expand="block" type="button" (click)="addComponent()">
+            <ion-icon slot="start" name="add-outline"></ion-icon>
+            ADD NEW COMPONENT
+          </ion-button>
+
+          <p class="section-label list-section-label">List of components</p>
+        </div>
+
+        <ion-list lines="none" *ngIf="hasComponents; else emptyState">
+          <ion-item-sliding *ngFor="let component of components" class="component-slide">
+            <ion-item button detail="false" class="component-item" (click)="openComponent(component)">
+              <ion-label>
+                <strong>{{ component.name }}</strong>
+                <p>Code: {{ component.code }}</p>
+              </ion-label>
+              <div slot="end" class="component-arrow">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </div>
+            </ion-item>
+
+            <ion-item-options side="end" class="component-item-options">
+              <ion-item-option color="primary" class="device-action action-view" (click)="openComponent(component)">
+                <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="medium" class="device-action action-edit" (click)="editComponent(component.code)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="danger" class="device-action action-remove" (click)="removeComponent(component.code)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        </ion-list>
+
+        <ng-template #emptyState>
+          <div class="empty-state-block">
+            <p class="empty-state">No components added yet.</p>
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+
+  <ion-alert
+    [isOpen]="removeConfirmOpen"
+    header="Remove Component"
+    message="Are you sure you want to remove this component?"
+    [buttons]="removeConfirmButtons"
+    (didDismiss)="cancelRemoveComponent()"
+  ></ion-alert>
+</ion-content>

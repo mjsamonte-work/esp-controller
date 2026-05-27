@@ -31,6 +31,26 @@ export const routes: Routes = [
     loadComponent: () => import('./easy-remote/easy-remote.page').then((m) => m.EasyRemotePage),
   },
   {
+    path: 'devices/:deviceCode/components',
+    loadComponent: () =>
+      import('./devices/device-components.page').then((m) => m.DeviceComponentsPage),
+  },
+  {
+    path: 'devices/:deviceCode/components/new',
+    loadComponent: () =>
+      import('./devices/device-component-form.page').then((m) => m.DeviceComponentFormPage),
+  },
+  {
+    path: 'devices/:deviceCode/components/:componentCode/edit',
+    loadComponent: () =>
+      import('./devices/device-component-form.page').then((m) => m.DeviceComponentFormPage),
+  },
+  {
+    path: 'easy-remote/:deviceCode/components/:componentCode',
+    loadComponent: () =>
+      import('./easy-remote/component-control.page').then((m) => m.ComponentControlPage),
+  },
+  {
     path: '',
     redirectTo: 'splash',
     pathMatch: 'full',
