@@ -344,15 +344,6 @@ ion-title {
   margin-top: 12px;
 }
 
-.component-item-options {
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.component-item-options .component-action {
-  --min-width: 76px;
-}
-
 .control-shell {
   min-height: 100%;
   display: flex;
@@ -557,17 +548,6 @@ ion-title {
   margin: 4px 0 0;
   color: var(--easy-muted);
   font-size: 0.88rem;
-}
-
-.component-action {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(13, 87, 184, 0.12);
-  color: var(--easy-blue);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
 }
 
 .remove-button {

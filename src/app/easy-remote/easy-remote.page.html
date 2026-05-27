@@ -109,41 +109,39 @@
           <p class="section-label list-section-label">List of components</p>
         </div>
 
-        <div class="components-list-card">
-          <ion-list lines="none" *ngIf="components.length; else noComponents">
-            <ion-item-sliding *ngFor="let component of components" class="component-slide">
-              <ion-item button detail="false" class="component-item" (click)="openComponent(component)">
-                <ion-label>
-                  <strong>{{ component.name }}</strong>
-                  <p>Code: {{ component.code }}</p>
-                </ion-label>
-                <div slot="end" class="component-arrow">
-                  <ion-icon name="chevron-forward-outline"></ion-icon>
-                </div>
-              </ion-item>
+        <ion-list lines="none" *ngIf="components.length; else noComponents">
+          <ion-item-sliding *ngFor="let component of components" class="component-slide">
+            <ion-item button detail="false" class="component-item" (click)="openComponent(component)">
+              <ion-label>
+                <strong>{{ component.name }}</strong>
+                <p>Code: {{ component.code }}</p>
+              </ion-label>
+              <div slot="end" class="component-arrow">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </div>
+            </ion-item>
 
-              <ion-item-options side="end" class="component-item-options">
-                <ion-item-option color="primary" class="component-action action-view" (click)="openComponent(component)">
-                  <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
-                </ion-item-option>
-                <ion-item-option color="medium" class="component-action action-edit" (click)="editComponent(component)">
-                  <ion-icon slot="icon-only" name="create-outline"></ion-icon>
-                </ion-item-option>
-                <ion-item-option color="danger" class="component-action action-remove" (click)="removeComponent(component.code)">
-                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-                </ion-item-option>
-              </ion-item-options>
-            </ion-item-sliding>
-          </ion-list>
+            <ion-item-options side="end" class="component-item-options">
+              <ion-item-option color="primary" class="component-action action-view" (click)="openComponent(component)">
+                <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="medium" class="component-action action-edit" (click)="editComponent(component)">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="danger" class="component-action action-remove" (click)="removeComponent(component.code)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        </ion-list>
 
-          <ng-template #noComponents>
-            <div class="empty-state-block">
-              <p class="component-empty">
-                No components added yet. Tap Add New Component to start using component control.
-              </p>
-            </div>
-          </ng-template>
-        </div>
+        <ng-template #noComponents>
+          <div class="empty-state-block">
+            <p class="component-empty">
+              No components added yet. Tap Add New Component to start using component control.
+            </p>
+          </div>
+        </ng-template>
       </section>
     </div>
   </div>
