@@ -179,6 +179,10 @@ export class DeviceComponentFormPage implements OnInit {
     return this.originalComponentCode !== null;
   }
 
+  get backLink(): string[] {
+    return this.deviceCode ? ['/easy-remote', this.deviceCode] : ['/devices'];
+  }
+
   private presentToast(message: string, color: 'success' | 'danger'): void {
     this.toastMessage = message;
     this.toastColor = color;

@@ -62,6 +62,12 @@ describe('DeviceComponentFormPage', () => {
     expect(fixture.nativeElement.textContent).toContain('SAVE COMPONENT');
   });
 
+  it('links back to the current device details page', () => {
+    const backButton: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.back-button');
+
+    expect(backButton?.getAttribute('href')).toContain('/easy-remote/esp1');
+  });
+
   it('saves a new component and returns to the device detail page', async () => {
     component.componentName = 'Relay 2';
     component.componentCode = 'relay-2';
