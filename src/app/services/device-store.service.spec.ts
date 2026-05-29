@@ -167,6 +167,89 @@ describe('DeviceStoreService', () => {
     ]);
   });
 
+  it('imports devices and merges components without removing existing devices', async () => {
+    await service.ready();
+    await service.addDevice({
+      name: 'Kitchen Lamp',
+      code: 'esp1',
+      location: 'Kitchen',
+      autoCheckIntervalSeconds: 30,
+    });
+
+    const result = await service.importDevices({
+      devices: [
+        {
+          name: 'Kitchen Lamp v2',
+          code: 'ESP1',
+          location: 'Bedroom',
+          autoCheckIntervalSeconds: 240,
+          components: [
+            {
+              name: 'Relay 1',
+              code: 'relay-1',
+            },
+            {
+              name: 'Relay 1 duplicate',
+              code: 'relay-1',
+            },
+          ],
+        },
+        {
+          name: 'Garage Door',
+          code: 'esp2',
+          location: 'Garage',
+          autoCheckIntervalSeconds: 120,
+          components: [
+            {
+              name: 'Gate',
+              code: 'gate-1',
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result).toEqual({
+      added: 1,
+      updated: 1,
+      skipped: 0,
+    });
+    expect(service.devices).toEqual([
+      {
+        name: 'Kitchen Lamp v2',
+        code: 'ESP1',
+        location: 'Bedroom',
+        autoCheckIntervalSeconds: 240,
+        components: [
+          {
+            name: 'Relay 1',
+            code: 'relay-1',
+          },
+        ],
+      },
+      {
+        name: 'Garage Door',
+        code: 'esp2',
+        location: 'Garage',
+        autoCheckIntervalSeconds: 120,
+        components: [
+          {
+            name: 'Gate',
+            code: 'gate-1',
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('rejects invalid import payloads', async () => {
+    await service.ready();
+
+    await expectAsync(service.importDevices({})).toBeRejectedWithError(
+      'The imported file does not contain any devices.',
+    );
+  });
+
   it('removes a saved device', async () => {
     await service.ready();
     await service.addDevice({

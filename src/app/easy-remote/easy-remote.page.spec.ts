@@ -112,6 +112,13 @@ describe('EasyRemotePage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/devices', 'esp1', 'components', 'new']);
   });
 
+  it('hides the add component action when disabled', () => {
+    component.showAddComponentAction = false;
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('ADD NEW COMPONENT');
+  });
+
   it('shows separate device and server statuses', () => {
     deviceHealth$.next('online');
     fixture.detectChanges();

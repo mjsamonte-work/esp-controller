@@ -1,0 +1,108 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" routerLink="/devices" aria-label="Back to devices">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>IMPORT DEVICES</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="device-form-shell">
+    <div class="device-form-stage">
+      <ion-card class="form-card">
+        <ion-card-content>
+          <p class="section-label">Import JSON</p>
+          <h2>Bring devices and components into the app</h2>
+
+          <div class="import-copy">
+            <p>
+              Upload a JSON file that contains either a device array or an object with a
+              <code>devices</code> array. Imported devices are merged into the existing list by code,
+              and component arrays are saved with each device.
+            </p>
+          </div>
+
+          <div class="sample-section">
+            <div class="sample-section-header">
+              <div>
+                <p class="section-label">Sample Data</p>
+                <h3>Use this table as your import template</h3>
+              </div>
+
+              <ion-button class="sample-download-button" type="button" fill="outline" (click)="downloadSampleFile()">
+                <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+                DOWNLOAD SAMPLE JSON
+              </ion-button>
+            </div>
+
+            <div class="sample-table-wrap">
+              <table class="sample-table">
+                <thead>
+                  <tr>
+                    <th>Device Name</th>
+                    <th>Code</th>
+                    <th>Location</th>
+                    <th>Auto Check</th>
+                    <th>Components</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let device of sampleImportDevices; let i = index">
+                    <td>{{ device.name }}</td>
+                    <td>{{ device.code }}</td>
+                    <td>{{ device.location }}</td>
+                    <td>{{ device.autoCheckIntervalSeconds }} seconds</td>
+                    <td>{{ getSampleComponentsLabel(i) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">JSON File</ion-label>
+            <input
+              type="file"
+              accept=".json,application/json"
+              (change)="onFileSelected($event)"
+              class="file-input"
+            />
+          </ion-item>
+
+          <ion-text color="medium" *ngIf="hasSelectedFile; else noFileSelected">
+            Selected file: {{ selectedFileName }}
+          </ion-text>
+          <ng-template #noFileSelected>
+            <ion-text color="medium">Choose a JSON file from your device.</ion-text>
+          </ng-template>
+
+          <ion-button
+            class="submit-button"
+            expand="block"
+            type="button"
+            [disabled]="!hasSelectedFile || isImporting"
+            (click)="importDevices()"
+          >
+            <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+            {{ importButtonLabel }}
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="2200"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

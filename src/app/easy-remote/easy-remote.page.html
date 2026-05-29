@@ -101,7 +101,7 @@
             </ion-badge>
           </ion-item>
 
-          <ion-button class="add-component-button" expand="block" (click)="openComponentForm()">
+          <ion-button *ngIf="showAddComponentAction" class="add-component-button" expand="block" (click)="openComponentForm()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
             ADD NEW COMPONENT
           </ion-button>
@@ -125,10 +125,16 @@
               <ion-item-option color="primary" class="component-action action-view" (click)="openComponent(component)">
                 <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option color="medium" class="component-action action-edit" (click)="editComponent(component)">
+              <ion-item-option
+                *ngIf="showEditComponentAction"
+                color="medium"
+                class="component-action action-edit"
+                (click)="editComponent(component)"
+              >
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
               <ion-item-option
+                *ngIf="showDeleteComponentAction"
                 color="danger"
                 class="component-action action-remove"
                 (click)="removeComponent(component.code, component.name)"

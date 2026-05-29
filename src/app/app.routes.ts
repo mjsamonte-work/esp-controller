@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./devices/devices.page').then((m) => m.DevicesPage),
   },
   {
+    path: 'devices/import',
+    loadComponent: () => import('./devices/device-import.page').then((m) => m.DeviceImportPage),
+  },
+  {
     path: 'devices/new',
     loadComponent: () => import('./devices/device-form.page').then((m) => m.DeviceFormPage),
   },

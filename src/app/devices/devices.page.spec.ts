@@ -55,6 +55,12 @@ describe('DevicesPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/devices/new']);
   });
 
+  it('opens the import page from the import button', () => {
+    component.importDevices();
+
+    expect(router.navigate).toHaveBeenCalledWith(['/devices/import']);
+  });
+
   it('opens the edit page for a selected device', () => {
     const event = new MouseEvent('click');
     spyOn(event, 'stopPropagation');

@@ -66,6 +66,9 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
 })
 export class EasyRemotePage implements OnInit, OnDestroy {
   readonly autoCheckIntervalOptions = AUTO_CHECK_INTERVAL_OPTIONS;
+  showAddComponentAction = false;
+  showEditComponentAction = true;
+  showDeleteComponentAction = false;
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
@@ -289,7 +292,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   }
 
   editComponent(component: DeviceComponent): void {
-    if (!this.device) {
+    if (!this.showEditComponentAction || !this.device) {
       return;
     }
 
@@ -297,7 +300,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   }
 
   removeComponent(componentCode: string, componentName = ''): void {
-    if (!this.deviceCode) {
+    if (!this.showDeleteComponentAction || !this.deviceCode) {
       return;
     }
 
@@ -343,7 +346,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   }
 
   openComponentForm(): void {
-    if (!this.device) {
+    if (!this.showAddComponentAction || !this.device) {
       return;
     }
 

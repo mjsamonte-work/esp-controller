@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
+  cloudUploadOutline,
   chevronBackOutline,
   chevronForwardOutline,
   createOutline,
@@ -87,6 +88,7 @@ export class DevicesPage implements OnInit {
   ) {
     addIcons({
       'add-outline': addOutline,
+      'cloud-upload-outline': cloudUploadOutline,
       'chevron-back-outline': chevronBackOutline,
       'chevron-forward-outline': chevronForwardOutline,
       'create-outline': createOutline,
@@ -112,6 +114,10 @@ export class DevicesPage implements OnInit {
     }
 
     void this.router.navigate(['/devices/new']);
+  }
+
+  importDevices(): void {
+    void this.router.navigate(['/devices/import']);
   }
 
   openDevice(device: Device): void {

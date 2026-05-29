@@ -9,6 +9,12 @@ import {
   type DeviceComponent,
 } from '../models/device.model';
 
+export interface DeviceImportResult {
+  added: number;
+  updated: number;
+  skipped: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -143,6 +149,65 @@ export class DeviceStoreService {
     await this.persist(updatedDevices);
   }
 
+  async importDevices(payload: unknown): Promise<DeviceImportResult> {
+    await this.ready();
+
+    const importedDevices = this.extractImportedDevices(payload);
+
+    if (importedDevices.length === 0) {
+      throw new Error('The imported file does not contain any devices.');
+    }
+
+    const normalizedImports = new Map<string, Device>();
+    let skipped = 0;
+
+    for (const candidate of importedDevices) {
+      const normalizedDevice = this.normalizeImportedDevice(candidate);
+
+      if (!normalizedDevice) {
+        skipped += 1;
+        continue;
+      }
+
+      normalizedImports.set(normalizedDevice.code.trim().toLowerCase(), normalizedDevice);
+    }
+
+    if (normalizedImports.size === 0) {
+      throw new Error('No valid devices were found in the imported file.');
+    }
+
+    const updatedDevices = [...this.devicesSubject.value];
+    let added = 0;
+    let updated = 0;
+
+    for (const [, importedDevice] of normalizedImports) {
+      const normalizedCode = importedDevice.code.trim().toLowerCase();
+      const existingIndex = updatedDevices.findIndex(
+        (device) => device.code.trim().toLowerCase() === normalizedCode,
+      );
+
+      if (existingIndex >= 0) {
+        updatedDevices[existingIndex] = {
+          ...updatedDevices[existingIndex],
+          ...importedDevice,
+        };
+        updated += 1;
+      } else {
+        updatedDevices.push(importedDevice);
+        added += 1;
+      }
+    }
+
+    this.devicesSubject.next(updatedDevices);
+    await this.persist(updatedDevices);
+
+    return {
+      added,
+      updated,
+      skipped,
+    };
+  }
+
   async removeDevice(code: string): Promise<void> {
     await this.ready();
 
@@ -268,5 +333,43 @@ export class DeviceStoreService {
         seenCodes.add(key);
         return true;
       });
+  }
+
+  private extractImportedDevices(payload: unknown): unknown[] {
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (payload && typeof payload === 'object') {
+      const candidate = payload as { devices?: unknown };
+
+      if (Array.isArray(candidate.devices)) {
+        return candidate.devices;
+      }
+    }
+
+    return [];
+  }
+
+  private normalizeImportedDevice(candidate: unknown): Device | null {
+    if (!this.isDevice(candidate)) {
+      return null;
+    }
+
+    const name = candidate.name?.trim() || candidate.code.trim();
+    const code = candidate.code.trim();
+    const location = candidate.location.trim();
+
+    if (!name || !code || !location) {
+      return null;
+    }
+
+    return {
+      name,
+      code,
+      location,
+      autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(candidate.autoCheckIntervalSeconds),
+      components: this.normalizeComponents(candidate.components),
+    };
   }
 }
