@@ -40,6 +40,12 @@ describe('DeviceImportPage', () => {
     expect(deviceStore.importDevices).not.toHaveBeenCalled();
   });
 
+  it('renders the default sample device data', () => {
+    expect(fixture.nativeElement.textContent).toContain('SMART EASY PH DEVICE');
+    expect(fixture.nativeElement.textContent).toContain('Equipment 1');
+    expect(fixture.nativeElement.textContent).toContain('Equipment 5');
+  });
+
   it('imports a JSON file and navigates back to devices', async () => {
     component.selectedFile = {
       name: 'devices.json',

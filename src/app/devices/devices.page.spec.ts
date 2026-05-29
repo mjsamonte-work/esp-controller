@@ -55,10 +55,11 @@ describe('DevicesPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/devices/new']);
   });
 
-  it('opens the import page from the import button', () => {
+  it('hides the import action by default', () => {
+    expect(component.showImportDeviceAction).toBeFalse();
+    expect(fixture.nativeElement.textContent).not.toContain('IMPORT DEVICES');
     component.importDevices();
-
-    expect(router.navigate).toHaveBeenCalledWith(['/devices/import']);
+    expect(router.navigate).not.toHaveBeenCalledWith(['/devices/import']);
   });
 
   it('opens the edit page for a selected device', () => {

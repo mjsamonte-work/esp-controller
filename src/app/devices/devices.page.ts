@@ -60,6 +60,7 @@ import { DeviceStoreService } from '../services/device-store.service';
 })
 export class DevicesPage implements OnInit {
   showAddDeviceAction = false;
+  showImportDeviceAction = false;
   showEditDeviceAction = true;
   showDeleteDeviceAction = false;
   readonly devices$ = this.deviceStore.devices$;
@@ -117,6 +118,10 @@ export class DevicesPage implements OnInit {
   }
 
   importDevices(): void {
+    if (!this.showImportDeviceAction) {
+      return;
+    }
+
     void this.router.navigate(['/devices/import']);
   }
 

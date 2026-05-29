@@ -87,6 +87,52 @@ describe('DeviceStoreService', () => {
     ]);
   });
 
+  it('seeds the default devices when storage is empty', async () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({});
+    spyOn(Preferences, 'get').and.resolveTo({
+      value: null,
+    });
+    spyOn(Preferences, 'set').and.resolveTo();
+    service = TestBed.inject(DeviceStoreService);
+    await service.ready();
+
+    expect(service.devices).toEqual([
+      {
+        name: 'SMART EASY PH DEVICE',
+        code: 'smart-easy-ph-device',
+        location: 'Living Room',
+        autoCheckIntervalSeconds: 30,
+        components: [
+          {
+            name: 'Equipment 1',
+            code: 'equipment-1',
+          },
+          {
+            name: 'Equipment 2',
+            code: 'equipment-2',
+          },
+          {
+            name: 'Equipment 3',
+            code: 'equipment-3',
+          },
+          {
+            name: 'Equipment 4',
+            code: 'equipment-4',
+          },
+          {
+            name: 'Equipment 5',
+            code: 'equipment-5',
+          },
+        ],
+      },
+    ]);
+    expect(Preferences.set).toHaveBeenCalledWith({
+      key: 'easy-remote.devices',
+      value: JSON.stringify(service.devices),
+    });
+  });
+
   it('updates the location without changing the device code', async () => {
     await service.ready();
     await service.addDevice({

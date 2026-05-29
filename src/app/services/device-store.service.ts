@@ -15,6 +15,37 @@ export interface DeviceImportResult {
   skipped: number;
 }
 
+const DEFAULT_DEVICES: Device[] = [
+  {
+    name: 'SMART EASY PH DEVICE',
+    code: 'smart-easy-ph-device',
+    location: 'Living Room',
+    autoCheckIntervalSeconds: DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+    components: [
+      {
+        name: 'Equipment 1',
+        code: 'equipment-1',
+      },
+      {
+        name: 'Equipment 2',
+        code: 'equipment-2',
+      },
+      {
+        name: 'Equipment 3',
+        code: 'equipment-3',
+      },
+      {
+        name: 'Equipment 4',
+        code: 'equipment-4',
+      },
+      {
+        name: 'Equipment 5',
+        code: 'equipment-5',
+      },
+    ],
+  },
+];
+
 @Injectable({
   providedIn: 'root',
 })
@@ -245,7 +276,7 @@ export class DeviceStoreService {
     });
 
     if (!rawDevices) {
-      this.devicesSubject.next([]);
+      await this.seedDefaultDevices();
       return;
     }
 
@@ -253,7 +284,7 @@ export class DeviceStoreService {
       const parsedDevices = JSON.parse(rawDevices) as unknown;
 
       if (!Array.isArray(parsedDevices)) {
-        this.devicesSubject.next([]);
+        await this.seedDefaultDevices();
         return;
       }
 
@@ -270,8 +301,22 @@ export class DeviceStoreService {
           .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
     } catch {
-      this.devicesSubject.next([]);
+      await this.seedDefaultDevices();
     }
+  }
+
+  private async seedDefaultDevices(): Promise<void> {
+    const defaultDevices = this.getDefaultDevices();
+
+    this.devicesSubject.next(defaultDevices);
+    await this.persist(defaultDevices);
+  }
+
+  private getDefaultDevices(): Device[] {
+    return DEFAULT_DEVICES.map((device) => ({
+      ...device,
+      components: this.normalizeComponents(device.components),
+    }));
   }
 
   private async persist(devices: Device[]): Promise<void> {

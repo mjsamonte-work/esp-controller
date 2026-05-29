@@ -45,26 +45,30 @@ import { DeviceStoreService } from '../services/device-store.service';
 export class DeviceImportPage {
   readonly sampleImportDevices = [
     {
-      name: 'Kitchen Lamp',
-      code: 'esp1',
-      location: 'Kitchen',
+      name: 'SMART EASY PH DEVICE',
+      code: 'smart-easy-ph-device',
+      location: 'Living Room',
       autoCheckIntervalSeconds: 60,
       components: [
         {
-          name: 'Relay 1',
-          code: 'relay-1',
+          name: 'Equipment 1',
+          code: 'equipment-1',
         },
-      ],
-    },
-    {
-      name: 'Garage Door',
-      code: 'esp2',
-      location: 'Garage',
-      autoCheckIntervalSeconds: 120,
-      components: [
         {
-          name: 'Gate Sensor',
-          code: 'gate-1',
+          name: 'Equipment 2',
+          code: 'equipment-2',
+        },
+        {
+          name: 'Equipment 3',
+          code: 'equipment-3',
+        },
+        {
+          name: 'Equipment 4',
+          code: 'equipment-4',
+        },
+        {
+          name: 'Equipment 5',
+          code: 'equipment-5',
         },
       ],
     },
