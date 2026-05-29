@@ -18,7 +18,12 @@ import {
 
 import { Device, type DeviceComponent } from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
-import { DeviceHealthState, MqttConnectionState, MqttService } from '../services/mqtt.service';
+import {
+  DeviceHealthState,
+  EquipmentState,
+  MqttConnectionState,
+  MqttService,
+} from '../services/mqtt.service';
 
 @Component({
   selector: 'app-component-control',
@@ -43,6 +48,7 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
 export class ComponentControlPage implements OnInit, OnDestroy {
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
+  readonly equipmentState$ = this.mqttService.equipmentState$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
   readonly confirmButtons = [
     {
@@ -125,6 +131,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       return;
     }
 
+    this.mqttService.setActiveDevice(this.device.code);
     this.pendingState = state;
     this.confirmAlertOpen = true;
   }
@@ -251,6 +258,30 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       case 'offline':
       default:
         return 'status-disconnected';
+    }
+  }
+
+  getEquipmentStateLabel(state: EquipmentState | null): string {
+    switch (state) {
+      case 'ON':
+        return 'ON';
+      case 'OFF':
+        return 'OFF';
+      case 'unknown':
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getEquipmentStateClass(state: EquipmentState | null): string {
+    switch (state) {
+      case 'ON':
+        return 'status-connected';
+      case 'OFF':
+        return 'status-disconnected';
+      case 'unknown':
+      default:
+        return 'status-pending';
     }
   }
 

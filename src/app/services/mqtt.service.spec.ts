@@ -100,7 +100,7 @@ describe('MqttService', () => {
     connect$.next();
 
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      ['devices/esp1/event'],
+      ['devices/esp1/event', 'devices/smart-easy-ph-device/event'],
       { qos: 0 },
       jasmine.any(Function),
     );
@@ -224,6 +224,77 @@ describe('MqttService', () => {
     );
   });
 
+  it('tracks the last equipment state when the device reports ON or OFF', async () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+
+    let state = 'unknown';
+    const subscription = service.equipmentState$.subscribe((value) => {
+      state = value;
+    });
+
+    message$.next({
+      topic: 'devices/esp1/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          state: 'OFF',
+          timestamp: '2026-04-01T00:00:00.000Z',
+        }),
+      ),
+    });
+
+    expect(state).toBe('OFF');
+    subscription.unsubscribe();
+  });
+
+  it('tracks equipment state updates from the shared device event topic', async () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+
+    let state = 'unknown';
+    const subscription = service.equipmentState$.subscribe((value) => {
+      state = value;
+    });
+
+    message$.next({
+      topic: 'devices/smart-easy-ph-device/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          state: 'ON',
+          timestamp: '2026-04-01T00:00:00.000Z',
+        }),
+      ),
+    });
+
+    expect(state).toBe('ON');
+    subscription.unsubscribe();
+  });
+
+  it('tracks component success updates without a timestamp', async () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+
+    let state = 'unknown';
+    const subscription = service.equipmentState$.subscribe((value) => {
+      state = value;
+    });
+
+    message$.next({
+      topic: 'devices/smart-easy-ph-device/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          target: 'component',
+          component: 'equipment-1',
+          state: 'ON',
+          deviceCode: 'smart-easy-ph-device',
+        }),
+      ),
+    });
+
+    expect(state).toBe('ON');
+    subscription.unsubscribe();
+  });
+
   it('adds an error log entry when publishing fails', async () => {
     mockClient.publish.and.callFake(((...args: unknown[]) => {
       const callback = args[args.length - 1];
@@ -256,8 +327,9 @@ describe('MqttService', () => {
     service.setActiveDevice('esp2');
 
     expect(mockClient.unsubscribe).toHaveBeenCalledWith('devices/esp1/event');
+    expect(mockClient.unsubscribe).toHaveBeenCalledWith('devices/smart-easy-ph-device/event');
     expect(mockClient.subscribe).toHaveBeenCalledWith(
-      ['devices/esp2/event'],
+      ['devices/esp2/event', 'devices/smart-easy-ph-device/event'],
       { qos: 0 },
       jasmine.any(Function),
     );

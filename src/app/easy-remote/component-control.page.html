@@ -56,6 +56,16 @@
             {{ getDeviceStatusLabel(deviceHealth$ | async) }}
           </div>
         </div>
+
+        <div class="status-row component-status-row">
+          <div class="status-copy">
+            <p class="section-label">Last Equipment State</p>
+            <p class="status-help">Shows the latest ON or OFF feedback received from the device.</p>
+          </div>
+          <div class="status-pill" [ngClass]="getEquipmentStateClass(equipmentState$ | async)">
+            {{ getEquipmentStateLabel(equipmentState$ | async) }}
+          </div>
+        </div>
       </section>
 
       <section class="action-panel">

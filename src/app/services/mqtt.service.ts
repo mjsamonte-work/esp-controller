@@ -20,8 +20,12 @@ export interface MqttLogEntry {
 }
 
 export type DeviceHealthState = 'unknown' | 'checking' | 'online' | 'offline';
+export type EquipmentState = 'unknown' | 'ON' | 'OFF';
 
 interface DeviceStatusMessage {
+  target?: string;
+  component?: string;
+  deviceCode?: string;
   state?: string;
   timestamp?: string;
 }
@@ -63,6 +67,7 @@ export const MQTT_CONNECT = new InjectionToken<MqttConnectFn | null>(
 export class MqttService implements OnDestroy {
   private readonly deviceCheckTimeoutMs = 5000;
   private readonly statusMessageFreshnessMs = 15000;
+  private readonly sharedEventTopic = 'devices/smart-easy-ph-device/event';
   private readonly mqttConfig = environment.mqtt;
   private readonly websocketProtocol: MqttProtocol = 'wss';
   private readonly connectFn = inject(MQTT_CONNECT);
@@ -70,6 +75,7 @@ export class MqttService implements OnDestroy {
   private readonly stateSubject = new BehaviorSubject<MqttConnectionState>('disconnected');
   private readonly subscriptionSubject = new BehaviorSubject<boolean>(false);
   private readonly deviceHealthSubject = new BehaviorSubject<DeviceHealthState>('unknown');
+  private readonly equipmentStateSubject = new BehaviorSubject<EquipmentState>('unknown');
   private readonly deviceLastSeenSubject = new BehaviorSubject<string | null>(null);
   private readonly deviceCheckInProgressSubject = new BehaviorSubject<boolean>(false);
   private readonly brokerUrl = `${this.websocketProtocol}://${this.mqttConfig.host}:${this.mqttConfig.websocketPort}${this.mqttConfig.path}`;
@@ -85,6 +91,7 @@ export class MqttService implements OnDestroy {
   readonly state$ = this.stateSubject.asObservable();
   readonly subscribed$ = this.subscriptionSubject.asObservable();
   readonly deviceHealth$ = this.deviceHealthSubject.asObservable();
+  readonly equipmentState$ = this.equipmentStateSubject.asObservable();
   readonly deviceLastSeen$ = this.deviceLastSeenSubject.asObservable();
   readonly deviceCheckInProgress$ = this.deviceCheckInProgressSubject.asObservable();
 
@@ -113,10 +120,11 @@ export class MqttService implements OnDestroy {
     const previousTopics = this.activeSubscribeTopics;
     this.activeDeviceCode = normalizedCode;
     const { eventTopic } = this.resolveTopics(normalizedCode);
-    const nextTopics = [eventTopic];
+    const nextTopics = [eventTopic, this.sharedEventTopic];
     this.activeSubscribeTopics = nextTopics;
     this.subscriptionSubject.next(false);
     this.deviceHealthSubject.next('unknown');
+    this.equipmentStateSubject.next('unknown');
     this.deviceLastSeenSubject.next(null);
     this.deviceCheckInProgressSubject.next(false);
     this.pendingHealthCheck = false;
@@ -428,7 +436,7 @@ export class MqttService implements OnDestroy {
 
     const activeDeviceCode = this.activeDeviceCode;
     const { eventTopic } = this.resolveTopics(activeDeviceCode);
-    const subscribeTopics = [eventTopic];
+    const subscribeTopics = [eventTopic, this.sharedEventTopic];
 
     client.subscribe(subscribeTopics, { qos: 0 }, (error?: Error | null) => {
       if (error) {
@@ -540,7 +548,7 @@ export class MqttService implements OnDestroy {
 
     const { eventTopic } = this.resolveTopics(this.activeDeviceCode);
 
-    if (topic !== eventTopic) {
+    if (topic !== eventTopic && topic !== this.sharedEventTopic) {
       return;
     }
 
@@ -554,6 +562,12 @@ export class MqttService implements OnDestroy {
     this.pendingHealthCheck = false;
     this.lastDeviceCheckRequestedAt = null;
     this.deviceHealthSubject.next('online');
+    const normalizedState = parsedMessage.state?.trim().toUpperCase();
+
+    if (normalizedState === 'ON' || normalizedState === 'OFF') {
+      this.equipmentStateSubject.next(normalizedState);
+    }
+
     this.deviceCheckInProgressSubject.next(false);
     this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
   }
@@ -569,6 +583,9 @@ export class MqttService implements OnDestroy {
       const message = parsed as DeviceStatusMessage;
 
       return {
+        target: typeof message.target === 'string' ? message.target : undefined,
+        component: typeof message.component === 'string' ? message.component : undefined,
+        deviceCode: typeof message.deviceCode === 'string' ? message.deviceCode : undefined,
         state: typeof message.state === 'string' ? message.state : undefined,
         timestamp: typeof message.timestamp === 'string' ? message.timestamp : undefined,
       };
@@ -579,9 +596,14 @@ export class MqttService implements OnDestroy {
 
   private isFreshDeviceStatus(message: DeviceStatusMessage): boolean {
     const normalizedState = message.state?.trim().toUpperCase();
+    const normalizedTarget = message.target?.trim().toLowerCase();
 
     if (!normalizedState || !['ONLINE', 'ON', 'OFF'].includes(normalizedState)) {
       return false;
+    }
+
+    if (normalizedTarget === 'component' && (normalizedState === 'ON' || normalizedState === 'OFF')) {
+      return true;
     }
 
     if (!message.timestamp) {

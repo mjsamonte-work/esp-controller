@@ -14,11 +14,13 @@ describe('ComponentControlPage', () => {
   let router: Router;
   let connectionState$: BehaviorSubject<'subscribed' | 'disconnected'>;
   let deviceHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
+  let equipmentState$: BehaviorSubject<'unknown' | 'ON' | 'OFF'>;
   let deviceCheckInProgress$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     connectionState$ = new BehaviorSubject<'subscribed' | 'disconnected'>('subscribed');
     deviceHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
+    equipmentState$ = new BehaviorSubject<'unknown' | 'ON' | 'OFF'>('unknown');
     deviceCheckInProgress$ = new BehaviorSubject<boolean>(false);
     mqttService = jasmine.createSpyObj<MqttService>(
       'MqttService',
@@ -26,6 +28,7 @@ describe('ComponentControlPage', () => {
       {
         state$: connectionState$.asObservable(),
         deviceHealth$: deviceHealth$.asObservable(),
+        equipmentState$: equipmentState$.asObservable(),
         deviceCheckInProgress$: deviceCheckInProgress$.asObservable(),
       },
     );
@@ -93,15 +96,18 @@ describe('ComponentControlPage', () => {
   });
 
   it('shows a confirmation alert before turning on or off', () => {
+    deviceHealth$.next('online');
     component.requestStateChange('ON');
     fixture.detectChanges();
 
     expect(component.confirmAlertOpen).toBeTrue();
     expect(component.confirmHeader).toBe('Confirm Turn On');
     expect(component.confirmMessage).toContain('turn on Relay 1');
+    expect(mqttService.setActiveDevice).toHaveBeenCalledWith('esp1');
   });
 
   it('uses a confirmation alert before turning off', () => {
+    deviceHealth$.next('online');
     component.requestStateChange('OFF');
     fixture.detectChanges();
 
@@ -118,6 +124,14 @@ describe('ComponentControlPage', () => {
 
     expect(buttons[0].disabled).toBeTrue();
     expect(buttons[1].disabled).toBeTrue();
+  });
+
+  it('shows the last equipment state feedback', () => {
+    equipmentState$.next('OFF');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Last Equipment State');
+    expect(fixture.nativeElement.textContent).toContain('OFF');
   });
 
   it('redirects away when the component cannot be found', async () => {
