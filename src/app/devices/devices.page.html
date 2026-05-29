@@ -26,7 +26,7 @@
             </ion-badge>
           </ion-item>
 
-          <ion-button class="add-device-button" expand="block" (click)="createDevice()">
+          <ion-button *ngIf="showAddDeviceAction" class="add-device-button" expand="block" (click)="createDevice()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
             ADD NEW DEVICE
           </ion-button>
@@ -50,10 +50,20 @@
               <ion-item-option color="primary" class="device-action action-view" (click)="openDevice(device)">
                 <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option color="medium" class="device-action action-edit" (click)="editDevice(device, $event)">
+              <ion-item-option
+                *ngIf="showEditDeviceAction"
+                color="medium"
+                class="device-action action-edit"
+                (click)="editDevice(device, $event)"
+              >
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option color="danger" class="device-action action-remove" (click)="removeDevice(device, $event)">
+              <ion-item-option
+                *ngIf="showDeleteDeviceAction"
+                color="danger"
+                class="device-action action-remove"
+                (click)="removeDevice(device, $event)"
+              >
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-item-option>
             </ion-item-options>

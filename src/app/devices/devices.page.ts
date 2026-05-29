@@ -58,6 +58,9 @@ import { DeviceStoreService } from '../services/device-store.service';
   ],
 })
 export class DevicesPage implements OnInit {
+  showAddDeviceAction = false;
+  showEditDeviceAction = true;
+  showDeleteDeviceAction = false;
   readonly devices$ = this.deviceStore.devices$;
   readonly removeConfirmButtons = [
     {
@@ -104,6 +107,10 @@ export class DevicesPage implements OnInit {
   }
 
   createDevice(): void {
+    if (!this.showAddDeviceAction) {
+      return;
+    }
+
     void this.router.navigate(['/devices/new']);
   }
 
@@ -112,11 +119,19 @@ export class DevicesPage implements OnInit {
   }
 
   editDevice(device: Device, event: Event): void {
+    if (!this.showEditDeviceAction) {
+      return;
+    }
+
     event.stopPropagation();
     void this.router.navigate(['/devices', device.code, 'edit']);
   }
 
   async removeDevice(device: Device, event: Event): Promise<void> {
+    if (!this.showDeleteDeviceAction) {
+      return;
+    }
+
     event.stopPropagation();
     this.pendingRemoveDevice = device;
     this.removeConfirmOpen = true;

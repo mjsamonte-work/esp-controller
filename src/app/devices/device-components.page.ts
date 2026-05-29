@@ -50,6 +50,9 @@ import { DeviceStoreService } from '../services/device-store.service';
   ],
 })
 export class DeviceComponentsPage implements OnInit {
+  showAddComponentAction = false;
+  showEditComponentAction = true;
+  showDeleteComponentAction = false;
   deviceCode = '';
   deviceName = '';
   components: DeviceComponent[] = [];
@@ -107,7 +110,7 @@ export class DeviceComponentsPage implements OnInit {
   }
 
   addComponent(): void {
-    if (!this.deviceCode) {
+    if (!this.showAddComponentAction || !this.deviceCode) {
       return;
     }
 
@@ -123,7 +126,7 @@ export class DeviceComponentsPage implements OnInit {
   }
 
   editComponent(componentCode: string): void {
-    if (!this.deviceCode) {
+    if (!this.showEditComponentAction || !this.deviceCode) {
       return;
     }
 
@@ -137,7 +140,7 @@ export class DeviceComponentsPage implements OnInit {
   }
 
   removeComponent(componentCode: string, componentName = ''): void {
-    if (!this.deviceCode) {
+    if (!this.showDeleteComponentAction || !this.deviceCode) {
       return;
     }
 

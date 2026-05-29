@@ -26,7 +26,7 @@
             </ion-badge>
           </ion-item>
 
-          <ion-button class="add-component-button" expand="block" type="button" (click)="addComponent()">
+          <ion-button *ngIf="showAddComponentAction" class="add-component-button" expand="block" type="button" (click)="addComponent()">
             <ion-icon slot="start" name="add-outline"></ion-icon>
             ADD NEW COMPONENT
           </ion-button>
@@ -50,10 +50,16 @@
               <ion-item-option color="primary" class="device-action action-view" (click)="openComponent(component)">
                 <ion-icon slot="icon-only" name="eye-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option color="medium" class="device-action action-edit" (click)="editComponent(component.code)">
+              <ion-item-option
+                *ngIf="showEditComponentAction"
+                color="medium"
+                class="device-action action-edit"
+                (click)="editComponent(component.code)"
+              >
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
               <ion-item-option
+                *ngIf="showDeleteComponentAction"
                 color="danger"
                 class="device-action action-remove"
                 (click)="removeComponent(component.code, component.name)"
