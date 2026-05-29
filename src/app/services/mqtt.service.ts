@@ -30,6 +30,10 @@ interface DeviceStatusMessage {
   timestamp?: string;
 }
 
+interface MqttMessagePacket {
+  retain?: boolean;
+}
+
 export type MqttConnectFn = (
   brokerUrl: string | IClientOptions,
   options?: IClientOptions,
@@ -348,8 +352,8 @@ export class MqttService implements OnDestroy {
       this.subscribeToActiveDevice();
     });
 
-    client.on('message', (topic, payload) => {
-      this.handleIncomingMessage(topic, payload.toString());
+    client.on('message', (topic, payload, packet) => {
+      this.handleIncomingMessage(topic, payload.toString(), packet);
       this.addLog({
         direction: 'received',
         message: 'Message received',
@@ -541,7 +545,7 @@ export class MqttService implements OnDestroy {
     }
   }
 
-  private handleIncomingMessage(topic: string, payload: string): void {
+  private handleIncomingMessage(topic: string, payload: string, packet?: MqttMessagePacket): void {
     if (!this.activeDeviceCode) {
       return;
     }
@@ -555,6 +559,15 @@ export class MqttService implements OnDestroy {
     const parsedMessage = this.parseDeviceStatusMessage(payload);
 
     if (!parsedMessage || !this.isFreshDeviceStatus(parsedMessage)) {
+      return;
+    }
+
+    if (
+      packet?.retain &&
+      parsedMessage.target?.trim().toLowerCase() === 'device' &&
+      parsedMessage.state?.trim().toUpperCase() === 'ONLINE' &&
+      !parsedMessage.timestamp
+    ) {
       return;
     }
 

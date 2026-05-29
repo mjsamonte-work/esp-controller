@@ -50,7 +50,7 @@
         <div class="status-row component-status-row">
           <div class="status-copy">
             <p class="section-label">Device Status</p>
-            <p class="status-help">The device must be online before the component command can be sent.</p>
+            <p class="status-help">If the device stops sending updates on /event, it is treated as offline.</p>
           </div>
           <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
             {{ getDeviceStatusLabel(deviceHealth$ | async) }}
@@ -60,7 +60,7 @@
         <div class="status-row component-status-row">
           <div class="status-copy">
             <p class="section-label">Last Equipment State</p>
-            <p class="status-help">Shows the latest ON or OFF feedback received from the device.</p>
+            <p class="status-help">Shows the latest ON or OFF feedback received from the device on /event.</p>
           </div>
           <div class="status-pill" [ngClass]="getEquipmentStateClass(equipmentState$ | async)">
             {{ getEquipmentStateLabel(equipmentState$ | async) }}
@@ -116,7 +116,8 @@
     [isOpen]="toastOpen"
     [message]="toastMessage"
     [color]="toastColor"
-    duration="1800"
+    [buttons]="toastButtons"
+    duration="10000"
     position="top"
     (didDismiss)="closeToast()"
   ></ion-toast>

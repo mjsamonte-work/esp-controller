@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { discardPeriodicTasks, fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 
@@ -87,12 +87,14 @@ describe('ComponentControlPage', () => {
   it('publishes a component ON command', async () => {
     deviceHealth$.next('online');
     fixture.detectChanges();
+    mqttService.checkDeviceStatus.calls.reset();
 
     component.requestStateChange('ON');
     fixture.detectChanges();
     await component.confirmStateChange();
 
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
   });
 
   it('shows a confirmation alert before turning on or off', () => {
@@ -133,6 +135,16 @@ describe('ComponentControlPage', () => {
     expect(fixture.nativeElement.textContent).toContain('Last Equipment State');
     expect(fixture.nativeElement.textContent).toContain('OFF');
   });
+
+  it('automatically refreshes device health while the page is open', fakeAsync(() => {
+    mqttService.checkDeviceStatus.calls.reset();
+
+    tick(30000);
+
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+    component.ngOnDestroy();
+    discardPeriodicTasks();
+  }));
 
   it('redirects away when the component cannot be found', async () => {
     deviceStore.findDevice.and.returnValue({

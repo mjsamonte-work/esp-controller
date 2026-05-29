@@ -12,7 +12,7 @@ describe('MqttService', () => {
   let close$: Subject<void>;
   let connect$: Subject<void>;
   let error$: Subject<Error>;
-  let message$: Subject<{ topic: string; payload: Uint8Array }>;
+  let message$: Subject<{ topic: string; payload: Uint8Array; retain?: boolean }>;
   let reconnect$: Subject<void>;
   let mockClient: jasmine.SpyObj<MqttClient>;
   let connectSpy: jasmine.Spy;
@@ -22,7 +22,7 @@ describe('MqttService', () => {
     close$ = new Subject<void>();
     connect$ = new Subject<void>();
     error$ = new Subject<Error>();
-    message$ = new Subject<{ topic: string; payload: Uint8Array }>();
+    message$ = new Subject<{ topic: string; payload: Uint8Array; retain?: boolean }>();
     reconnect$ = new Subject<void>();
 
     mockClient = jasmine.createSpyObj<MqttClient>('MqttClient', [
@@ -50,7 +50,7 @@ describe('MqttService', () => {
       }
 
       if (event === 'message') {
-        message$.subscribe((message) => handler(message.topic, message.payload));
+        message$.subscribe((message) => handler(message.topic, message.payload, { retain: message.retain ?? false }));
       }
 
       return mockClient;
@@ -352,6 +352,28 @@ describe('MqttService', () => {
     const state = await firstValueFrom(service.deviceHealth$);
 
     expect(state).toBe('online');
+  });
+
+  it('ignores retained ONLINE health replies', async () => {
+    service.setActiveDevice('esp1');
+    connect$.next();
+    await service.checkDeviceStatus('esp1');
+
+    message$.next({
+      topic: 'devices/esp1/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          target: 'device',
+          state: 'ONLINE',
+          deviceCode: 'esp1',
+        }),
+      ),
+      retain: true,
+    });
+
+    const state = await firstValueFrom(service.deviceHealth$);
+
+    expect(state).toBe('checking');
   });
 
   it('ignores stale retained status messages on first load', fakeAsync(() => {

@@ -50,6 +50,12 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
   readonly equipmentState$ = this.mqttService.equipmentState$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
+  readonly toastButtons = [
+    {
+      text: 'Close',
+      role: 'cancel',
+    },
+  ];
   readonly confirmButtons = [
     {
       text: 'Cancel',
@@ -76,6 +82,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   private routeComponentCode = '';
   currentDeviceHealth: DeviceHealthState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
+  private autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
 
   private readonly subscriptions = new Subscription();
 
@@ -91,6 +98,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopAutoRefresh();
     this.subscriptions.unsubscribe();
   }
 
@@ -162,9 +170,10 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     try {
       await this.mqttService.publishComponentState(this.device.code, this.component.code, state);
       this.presentToast(
-        `${state === 'ON' ? 'Turn on' : 'Turn off'} completed for ${this.component.name}.`,
+        `Command sent for ${this.component.name}. We’ll keep checking for the device update.`,
         'success',
       );
+      void this.refreshDeviceStatus();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       this.presentToast(message, 'danger');
@@ -217,6 +226,8 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     if (!this.device) {
       return;
     }
+
+    this.startAutoRefresh();
 
     try {
       await this.mqttService.checkDeviceStatus(this.device.code);
@@ -285,6 +296,25 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     }
   }
 
+  private startAutoRefresh(): void {
+    this.stopAutoRefresh();
+
+    if (!this.device) {
+      return;
+    }
+
+    this.autoRefreshIntervalId = setInterval(() => {
+      void this.refreshDeviceStatus();
+    }, this.device.autoCheckIntervalSeconds * 1000);
+  }
+
+  private stopAutoRefresh(): void {
+    if (this.autoRefreshIntervalId) {
+      clearInterval(this.autoRefreshIntervalId);
+      this.autoRefreshIntervalId = null;
+    }
+  }
+
   private presentToast(message: string, color: 'success' | 'danger'): void {
     this.toastMessage = message;
     this.toastColor = color;
@@ -329,6 +359,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     this.device = device;
     this.component = component;
     this.mqttService.setActiveDevice(device.code);
+    this.startAutoRefresh();
     return true;
   }
 }
