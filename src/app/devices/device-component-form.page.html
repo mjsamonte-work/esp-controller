@@ -30,9 +30,14 @@
               <ion-input [(ngModel)]="componentName" placeholder="e.g. Relay 1" autocomplete="off"></ion-input>
             </ion-item>
 
-            <ion-item lines="none" class="input-item">
+            <ion-item lines="none" class="input-item readonly-input-item" [class.is-readonly]="isEditing">
               <ion-label position="stacked">Component Code</ion-label>
-              <ion-input [(ngModel)]="componentCode" placeholder="e.g. relay-1" autocomplete="off"></ion-input>
+              <ion-input
+                [(ngModel)]="componentCode"
+                placeholder="e.g. relay-1"
+                autocomplete="off"
+                [readonly]="isEditing"
+              ></ion-input>
             </ion-item>
 
             <ion-button class="submit-button" expand="block" type="button" (click)="saveComponent()">

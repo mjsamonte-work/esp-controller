@@ -62,6 +62,27 @@ describe('DeviceComponentFormPage', () => {
     expect(fixture.nativeElement.textContent).toContain('SAVE COMPONENT');
   });
 
+  it('makes the component code read-only while editing', () => {
+    component.originalComponentCode = 'relay-1';
+    fixture.detectChanges();
+
+    const componentCodeInput: HTMLIonInputElement | null = fixture.nativeElement.querySelector(
+      'ion-input[placeholder="e.g. relay-1"]',
+    );
+
+    expect(componentCodeInput?.readonly).toBeTrue();
+  });
+
+  it('shows component name before component code', () => {
+    const labels = Array.from(
+      fixture.nativeElement.querySelectorAll('ion-label') as NodeListOf<Element>,
+    ).map((label) => label.textContent?.trim());
+
+    expect(labels).toContain('Component Name');
+    expect(labels).toContain('Component Code');
+    expect(labels.indexOf('Component Name')).toBeLessThan(labels.indexOf('Component Code'));
+  });
+
   it('links back to the current device details page', () => {
     const backButton: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.back-button');
 

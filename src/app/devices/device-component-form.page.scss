@@ -1,1 +1,15 @@
 /* Styles moved to src/global.scss */
+
+.readonly-input-item.is-readonly {
+  --background: rgba(102, 112, 133, 0.08);
+}
+
+.readonly-input-item.is-readonly ion-label,
+.readonly-input-item.is-readonly ion-input {
+  color: var(--easy-muted);
+}
+
+.readonly-input-item.is-readonly ion-input::part(native) {
+  color: var(--easy-muted);
+  opacity: 1;
+}
