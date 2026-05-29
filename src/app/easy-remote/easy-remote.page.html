@@ -128,7 +128,11 @@
               <ion-item-option color="medium" class="component-action action-edit" (click)="editComponent(component)">
                 <ion-icon slot="icon-only" name="create-outline"></ion-icon>
               </ion-item-option>
-              <ion-item-option color="danger" class="component-action action-remove" (click)="removeComponent(component.code)">
+              <ion-item-option
+                color="danger"
+                class="component-action action-remove"
+                (click)="removeComponent(component.code, component.name)"
+              >
                 <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-item-option>
             </ion-item-options>
@@ -158,7 +162,7 @@
   <ion-alert
     [isOpen]="componentRemoveConfirmOpen"
     header="Remove Component"
-    message="Are you sure you want to remove this component?"
+    [message]="componentRemoveConfirmMessage"
     [buttons]="componentRemoveConfirmButtons"
     (didDismiss)="cancelRemoveComponent()"
   ></ion-alert>

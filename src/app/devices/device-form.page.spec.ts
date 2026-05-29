@@ -73,6 +73,12 @@ describe('DeviceFormPage', () => {
     });
   });
 
+  it('shows a back link to the devices list', () => {
+    const backButton: HTMLAnchorElement | null = fixture.nativeElement.querySelector('.back-button');
+
+    expect(backButton?.getAttribute('href')).toContain('/devices');
+  });
+
   it('loads an existing device for editing and keeps the code disabled', async () => {
     TestBed.resetTestingModule();
     await TestBed.configureTestingModule({

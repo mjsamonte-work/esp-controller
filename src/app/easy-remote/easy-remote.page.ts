@@ -90,6 +90,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   toastColor: 'success' | 'danger' = 'success';
   componentRemoveConfirmOpen = false;
   pendingRemoveComponentCode = '';
+  pendingRemoveComponentName = '';
   readonly componentRemoveConfirmButtons = [
     {
       text: 'Cancel',
@@ -295,7 +296,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     void this.router.navigate(['/devices', this.device.code, 'components', component.code, 'edit']);
   }
 
-  removeComponent(componentCode: string): void {
+  removeComponent(componentCode: string, componentName = ''): void {
     if (!this.deviceCode) {
       return;
     }
@@ -307,12 +308,14 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     }
 
     this.pendingRemoveComponentCode = normalizedCode;
+    this.pendingRemoveComponentName = componentName.trim();
     this.componentRemoveConfirmOpen = true;
   }
 
   cancelRemoveComponent(): void {
     this.componentRemoveConfirmOpen = false;
     this.pendingRemoveComponentCode = '';
+    this.pendingRemoveComponentName = '';
   }
 
   async confirmRemoveComponent(): Promise<void> {
@@ -392,6 +395,12 @@ export class EasyRemotePage implements OnInit, OnDestroy {
 
   private isServerConnected(state: string | null): boolean {
     return state === 'subscribed' || state === 'connected';
+  }
+
+  get componentRemoveConfirmMessage(): string {
+    return this.pendingRemoveComponentName
+      ? `Are you sure you want to remove ${this.pendingRemoveComponentName}?`
+      : 'Are you sure you want to remove this component?';
   }
 
   private startAutoRefresh(): void {

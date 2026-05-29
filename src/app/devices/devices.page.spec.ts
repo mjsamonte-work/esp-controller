@@ -74,8 +74,7 @@ describe('DevicesPage', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/devices', 'esp1', 'edit']);
   });
 
-  it('removes a selected device', async () => {
-    deviceStore.removeDevice.and.resolveTo();
+  it('asks for confirmation before removing a selected device', async () => {
     const event = new MouseEvent('click');
     spyOn(event, 'stopPropagation');
 
@@ -91,6 +90,13 @@ describe('DevicesPage', () => {
     );
 
     expect(event.stopPropagation).toHaveBeenCalled();
+    expect(component.removeConfirmOpen).toBeTrue();
+    expect(component.pendingRemoveDevice?.code).toBe('esp1');
+    expect(deviceStore.removeDevice).not.toHaveBeenCalled();
+
+    deviceStore.removeDevice.and.resolveTo();
+    await component.confirmRemoveDevice();
+
     expect(deviceStore.removeDevice).toHaveBeenCalledWith('esp1');
     expect(component.toastOpen).toBeTrue();
     expect(component.toastColor).toBe('success');

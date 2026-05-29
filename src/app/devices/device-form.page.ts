@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { addOutline, saveOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, saveOutline } from 'ionicons/icons';
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
@@ -90,6 +90,7 @@ export class DeviceFormPage implements OnInit {
   ) {
     addIcons({
       'add-outline': addOutline,
+      'chevron-back-outline': chevronBackOutline,
       'save-outline': saveOutline,
     });
   }

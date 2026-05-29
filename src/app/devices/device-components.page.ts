@@ -59,6 +59,7 @@ export class DeviceComponentsPage implements OnInit {
   toastColor: 'success' | 'danger' = 'success';
   removeConfirmOpen = false;
   pendingRemoveComponentCode = '';
+  pendingRemoveComponentName = '';
   readonly removeConfirmButtons = [
     {
       text: 'Cancel',
@@ -135,7 +136,7 @@ export class DeviceComponentsPage implements OnInit {
     void this.router.navigate(['/devices', this.deviceCode, 'components', normalizedCode, 'edit']);
   }
 
-  removeComponent(componentCode: string): void {
+  removeComponent(componentCode: string, componentName = ''): void {
     if (!this.deviceCode) {
       return;
     }
@@ -147,12 +148,14 @@ export class DeviceComponentsPage implements OnInit {
     }
 
     this.pendingRemoveComponentCode = normalizedCode;
+    this.pendingRemoveComponentName = componentName.trim();
     this.removeConfirmOpen = true;
   }
 
   cancelRemoveComponent(): void {
     this.removeConfirmOpen = false;
     this.pendingRemoveComponentCode = '';
+    this.pendingRemoveComponentName = '';
   }
 
   async confirmRemoveComponent(): Promise<void> {
@@ -188,6 +191,12 @@ export class DeviceComponentsPage implements OnInit {
     this.toastMessage = message;
     this.toastColor = color;
     this.toastOpen = true;
+  }
+
+  get removeConfirmMessage(): string {
+    return this.pendingRemoveComponentName
+      ? `Are you sure you want to remove ${this.pendingRemoveComponentName}?`
+      : 'Are you sure you want to remove this component?';
   }
 
   private async loadDevice(redirectOnMissing: boolean): Promise<boolean> {

@@ -13,6 +13,7 @@ import {
 import {
   IonBadge,
   IonButton,
+  IonAlert,
   IonContent,
   IonHeader,
   IonIcon,
@@ -40,6 +41,7 @@ import { DeviceStoreService } from '../services/device-store.service';
     NgIf,
     IonBadge,
     IonButton,
+    IonAlert,
     IonContent,
     IonHeader,
     IonIcon,
@@ -57,10 +59,24 @@ import { DeviceStoreService } from '../services/device-store.service';
 })
 export class DevicesPage implements OnInit {
   readonly devices$ = this.deviceStore.devices$;
+  readonly removeConfirmButtons = [
+    {
+      text: 'Cancel',
+      role: 'cancel',
+      handler: () => this.cancelRemoveDevice(),
+    },
+    {
+      text: 'Remove',
+      role: 'destructive',
+      handler: () => void this.confirmRemoveDevice(),
+    },
+  ];
 
   toastOpen = false;
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
+  removeConfirmOpen = false;
+  pendingRemoveDevice: Device | null = null;
 
   constructor(
     private readonly deviceStore: DeviceStoreService,
@@ -102,6 +118,21 @@ export class DevicesPage implements OnInit {
 
   async removeDevice(device: Device, event: Event): Promise<void> {
     event.stopPropagation();
+    this.pendingRemoveDevice = device;
+    this.removeConfirmOpen = true;
+  }
+
+  cancelRemoveDevice(): void {
+    this.removeConfirmOpen = false;
+    this.pendingRemoveDevice = null;
+  }
+
+  async confirmRemoveDevice(): Promise<void> {
+    if (!this.pendingRemoveDevice) {
+      return;
+    }
+
+    const device = this.pendingRemoveDevice;
 
     try {
       await this.deviceStore.removeDevice(device.code);
@@ -109,7 +140,15 @@ export class DevicesPage implements OnInit {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to remove the device.';
       this.presentToast(message, 'danger');
+    } finally {
+      this.cancelRemoveDevice();
     }
+  }
+
+  get removeConfirmMessage(): string {
+    return this.pendingRemoveDevice
+      ? `Are you sure you want to remove ${this.pendingRemoveDevice.name || this.pendingRemoveDevice.code}?`
+      : 'Are you sure you want to remove this device?';
   }
 
   closeToast(): void {

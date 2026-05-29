@@ -79,4 +79,12 @@
     position="top"
     (didDismiss)="closeToast()"
   ></ion-toast>
+
+  <ion-alert
+    [isOpen]="removeConfirmOpen"
+    header="Remove Device"
+    [message]="removeConfirmMessage"
+    [buttons]="removeConfirmButtons"
+    (didDismiss)="cancelRemoveDevice()"
+  ></ion-alert>
 </ion-content>
