@@ -5,6 +5,7 @@ import { addIcons } from 'ionicons';
 import { chevronBackOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonHeader,
@@ -27,24 +28,39 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
     AsyncPipe,
     NgClass,
     NgIf,
-  IonButton,
-  IonContent,
-  IonHeader,
-  IonIcon,
+    IonAlert,
+    IonButton,
+    IonContent,
+    IonHeader,
+    IonIcon,
     IonSpinner,
-  IonToast,
-  IonTitle,
-  IonToolbar,
-  RouterLink,
+    IonToast,
+    IonTitle,
+    IonToolbar,
+    RouterLink,
   ],
 })
 export class ComponentControlPage implements OnInit, OnDestroy {
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
   readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
+  readonly confirmButtons = [
+    {
+      text: 'Cancel',
+      role: 'cancel',
+      handler: () => this.cancelStateChange(),
+    },
+    {
+      text: 'Confirm',
+      role: 'confirm',
+      handler: () => void this.confirmStateChange(),
+    },
+  ];
 
   isSubmitting = false;
   submittingState: 'ON' | 'OFF' | null = null;
+  confirmAlertOpen = false;
+  pendingState: 'ON' | 'OFF' | null = null;
   toastOpen = false;
   toastMessage = '';
   toastColor: 'success' | 'danger' = 'success';
@@ -104,6 +120,30 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     await this.loadComponent(false);
   }
 
+  requestStateChange(state: 'ON' | 'OFF'): void {
+    if (!this.device || !this.component || !this.canSendDeviceCommand || this.isSubmitting) {
+      return;
+    }
+
+    this.pendingState = state;
+    this.confirmAlertOpen = true;
+  }
+
+  cancelStateChange(): void {
+    this.confirmAlertOpen = false;
+    this.pendingState = null;
+  }
+
+  async confirmStateChange(): Promise<void> {
+    if (!this.pendingState) {
+      return;
+    }
+
+    const state = this.pendingState;
+    this.cancelStateChange();
+    await this.sendState(state);
+  }
+
   async sendState(state: 'ON' | 'OFF'): Promise<void> {
     if (this.isSubmitting || !this.device || !this.component || !this.canSendDeviceCommand) {
       return;
@@ -152,7 +192,18 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   get canSendDeviceCommand(): boolean {
-    return this.isServerConnected(this.currentConnectionState);
+    return this.isServerConnected(this.currentConnectionState) && this.currentDeviceHealth === 'online';
+  }
+
+  get confirmHeader(): string {
+    return this.pendingState === 'ON'
+      ? 'Confirm Turn On'
+      : 'Confirm Turn Off';
+  }
+
+  get confirmMessage(): string {
+    const action = this.pendingState === 'ON' ? 'turn on' : 'turn off';
+    return `Are you sure you want to ${action} ${this.componentName || this.componentCode}?`;
   }
 
   async refreshDeviceStatus(): Promise<void> {

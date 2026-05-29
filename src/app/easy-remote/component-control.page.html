@@ -69,7 +69,7 @@
             class="action-button on-button"
             expand="block"
             [disabled]="isSubmitting || !canSendDeviceCommand"
-            (click)="sendState('ON')"
+            (click)="requestStateChange('ON')"
           >
             <ng-container *ngIf="submittingState === 'ON'; else onLabel">
               <ion-spinner name="crescent"></ion-spinner>
@@ -81,7 +81,7 @@
             class="action-button off-button"
             expand="block"
             [disabled]="isSubmitting || !canSendDeviceCommand"
-            (click)="sendState('OFF')"
+            (click)="requestStateChange('OFF')"
           >
             <ng-container *ngIf="submittingState === 'OFF'; else offLabel">
               <ion-spinner name="crescent"></ion-spinner>
@@ -93,6 +93,14 @@
       </section>
     </div>
   </div>
+
+  <ion-alert
+    [isOpen]="confirmAlertOpen"
+    [header]="confirmHeader"
+    [message]="confirmMessage"
+    [buttons]="confirmButtons"
+    (didDismiss)="cancelStateChange()"
+  ></ion-alert>
 
   <ion-toast
     [isOpen]="toastOpen"

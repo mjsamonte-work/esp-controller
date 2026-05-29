@@ -85,9 +85,39 @@ describe('ComponentControlPage', () => {
     deviceHealth$.next('online');
     fixture.detectChanges();
 
-    await component.sendState('ON');
+    component.requestStateChange('ON');
+    fixture.detectChanges();
+    await component.confirmStateChange();
 
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
+  });
+
+  it('shows a confirmation alert before turning on or off', () => {
+    component.requestStateChange('ON');
+    fixture.detectChanges();
+
+    expect(component.confirmAlertOpen).toBeTrue();
+    expect(component.confirmHeader).toBe('Confirm Turn On');
+    expect(component.confirmMessage).toContain('turn on Relay 1');
+  });
+
+  it('uses a confirmation alert before turning off', () => {
+    component.requestStateChange('OFF');
+    fixture.detectChanges();
+
+    expect(component.confirmAlertOpen).toBeTrue();
+    expect(component.confirmHeader).toBe('Confirm Turn Off');
+    expect(component.confirmMessage).toContain('turn off Relay 1');
+  });
+
+  it('disables action buttons when the device is not online', () => {
+    deviceHealth$.next('offline');
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
+
+    expect(buttons[0].disabled).toBeTrue();
+    expect(buttons[1].disabled).toBeTrue();
   });
 
   it('redirects away when the component cannot be found', async () => {
