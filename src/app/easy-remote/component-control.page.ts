@@ -48,8 +48,8 @@ import {
 export class ComponentControlPage implements OnInit, OnDestroy {
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
+  readonly componentHealth$ = this.mqttService.componentHealth$;
   readonly equipmentState$ = this.mqttService.equipmentState$;
-  readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
   readonly toastButtons = [
     {
       text: 'Close',
@@ -81,8 +81,10 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   private routeDeviceCode = '';
   private routeComponentCode = '';
   currentDeviceHealth: DeviceHealthState = 'unknown';
+  currentComponentHealth: DeviceHealthState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
   private autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly subscriptions = new Subscription();
 
@@ -109,6 +111,11 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       }),
     );
     this.subscriptions.add(
+      this.componentHealth$.subscribe((state) => {
+        this.currentComponentHealth = state;
+      }),
+    );
+    this.subscriptions.add(
       this.connectionState$.subscribe((state) => {
         this.currentConnectionState = state;
       }),
@@ -124,6 +131,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     }
 
     await this.refreshDeviceStatus();
+    await this.refreshComponentStatus();
   }
 
   async ionViewWillEnter(): Promise<void> {
@@ -131,7 +139,12 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       return;
     }
 
-    await this.loadComponent(false);
+    if (!(await this.loadComponent(false))) {
+      return;
+    }
+
+    await this.refreshDeviceStatus();
+    await this.refreshComponentStatus();
   }
 
   requestStateChange(state: 'ON' | 'OFF'): void {
@@ -139,7 +152,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.mqttService.setActiveDevice(this.device.code);
+    this.mqttService.setActiveComponent(this.device.code, this.component.code);
     this.pendingState = state;
     this.confirmAlertOpen = true;
   }
@@ -170,10 +183,10 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     try {
       await this.mqttService.publishComponentState(this.device.code, this.component.code, state);
       this.presentToast(
-        `Command sent for ${this.component.name}. We’ll keep checking for the device update.`,
+        `TURN ${state} command sent for ${this.component.name}.\nChecking the component response now.`,
         'success',
       );
-      void this.refreshDeviceStatus();
+      void this.refreshComponentStatus();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       this.presentToast(message, 'danger');
@@ -184,6 +197,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   closeToast(): void {
+    this.clearToastTimeout();
     this.toastOpen = false;
   }
 
@@ -208,7 +222,11 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   get canSendDeviceCommand(): boolean {
-    return this.isServerConnected(this.currentConnectionState) && this.currentDeviceHealth === 'online';
+    return (
+      this.isServerConnected(this.currentConnectionState) &&
+      this.currentDeviceHealth === 'online' &&
+      this.currentComponentHealth === 'online'
+    );
   }
 
   get confirmHeader(): string {
@@ -227,12 +245,23 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.startAutoRefresh();
-
     try {
       await this.mqttService.checkDeviceStatus(this.device.code);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to check device status.';
+      this.presentToast(message, 'danger');
+    }
+  }
+
+  async refreshComponentStatus(): Promise<void> {
+    if (!this.device || !this.component) {
+      return;
+    }
+
+    try {
+      await this.mqttService.checkComponentStatus(this.device.code, this.component.code);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to check component status.';
       this.presentToast(message, 'danger');
     }
   }
@@ -260,6 +289,33 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   getDeviceStatusClass(state: DeviceHealthState | null): string {
+    switch (state) {
+      case 'online':
+        return 'status-connected';
+      case 'checking':
+      case 'unknown':
+        return 'status-pending';
+      case 'offline':
+      default:
+        return 'status-disconnected';
+    }
+  }
+
+  getComponentStatusLabel(state: DeviceHealthState | null): string {
+    switch (state) {
+      case 'online':
+        return 'Online';
+      case 'offline':
+        return 'Offline';
+      case 'checking':
+        return 'Checking...';
+      case 'unknown':
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getComponentStatusClass(state: DeviceHealthState | null): string {
     switch (state) {
       case 'online':
         return 'status-connected';
@@ -305,6 +361,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
     this.autoRefreshIntervalId = setInterval(() => {
       void this.refreshDeviceStatus();
+      void this.refreshComponentStatus();
     }, this.device.autoCheckIntervalSeconds * 1000);
   }
 
@@ -316,9 +373,21 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {
+    this.clearToastTimeout();
     this.toastMessage = message;
     this.toastColor = color;
     this.toastOpen = true;
+    this.toastTimeoutId = setTimeout(() => {
+      this.toastOpen = false;
+      this.toastTimeoutId = null;
+    }, 3000);
+  }
+
+  private clearToastTimeout(): void {
+    if (this.toastTimeoutId) {
+      clearTimeout(this.toastTimeoutId);
+      this.toastTimeoutId = null;
+    }
   }
 
   private isServerConnected(state: string | null): boolean {
@@ -358,7 +427,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
     this.device = device;
     this.component = component;
-    this.mqttService.setActiveDevice(device.code);
+    this.mqttService.setActiveComponent(device.code, component.code);
     this.startAutoRefresh();
     return true;
   }

@@ -106,6 +106,40 @@ describe('MqttService', () => {
     );
   });
 
+  it('publishes a component health check to the control topic', () => {
+    service.checkComponentStatus('esp1', 'relay-1');
+    connect$.next();
+
+    const logs = service['logsSubject'].value;
+
+    expect(logs[0]).toEqual(
+      jasmine.objectContaining<MqttLogEntry>({
+        direction: 'sent',
+        message: 'Requested component status',
+        topic: 'devices/esp1/command',
+        payload: jasmine.stringMatching(/"target":"component"/),
+      }),
+    );
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'devices/esp1/command',
+      jasmine.stringMatching(/"target":"component"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'devices/esp1/command',
+      jasmine.stringMatching(/"component":"relay-1"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+    expect(mockClient.publish).toHaveBeenCalledWith(
+      'devices/esp1/command',
+      jasmine.stringMatching(/"state":"HEALTH"/),
+      { qos: 0 },
+      jasmine.any(Function),
+    );
+  });
+
   it('publishes the ON payload to the control topic', () => {
     service.publishState('esp1', 'ON');
 
@@ -247,6 +281,30 @@ describe('MqttService', () => {
     subscription.unsubscribe();
   });
 
+  it('tracks the component health and current state when the component reports ON or OFF', async () => {
+    service.setActiveComponent('esp1', 'relay-1');
+    connect$.next();
+    await service.checkComponentStatus('esp1', 'relay-1');
+
+    message$.next({
+      topic: 'devices/esp1/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          target: 'component',
+          component: 'relay-1',
+          state: 'ON',
+          timestamp: '2026-04-01T00:00:00.000Z',
+        }),
+      ),
+    });
+
+    const health = await firstValueFrom(service.componentHealth$);
+    const equipmentState = await firstValueFrom(service.equipmentState$);
+
+    expect(health).toBe('online');
+    expect(equipmentState).toBe('ON');
+  });
+
   it('tracks equipment state updates from the shared device event topic', async () => {
     service.setActiveDevice('esp1');
     connect$.next();
@@ -334,6 +392,21 @@ describe('MqttService', () => {
       jasmine.any(Function),
     );
   });
+
+  it('marks the component offline after a component health check timeout', fakeAsync(() => {
+    service.setActiveComponent('esp1', 'relay-1');
+    connect$.next();
+
+    void service.checkComponentStatus('esp1', 'relay-1');
+    tick(5001);
+
+    let state!: string;
+    service.componentHealth$.subscribe((value) => {
+      state = value;
+    });
+
+    expect(state).toBe('offline');
+  }));
 
   it('marks the device online when a health reply is received', async () => {
     service.setActiveDevice('esp1');

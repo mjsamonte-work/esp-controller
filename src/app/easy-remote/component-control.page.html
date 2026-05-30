@@ -60,7 +60,10 @@
         <div class="status-row component-status-row">
           <div class="status-copy">
             <p class="section-label">Last Equipment State</p>
-            <p class="status-help">Shows the latest ON or OFF feedback received from the device on /event.</p>
+            <p class="status-help">
+              Shows the latest ON or OFF feedback received from the device on /event.
+              This is the last known state of the equipment.
+            </p>
           </div>
           <div class="status-pill" [ngClass]="getEquipmentStateClass(equipmentState$ | async)">
             {{ getEquipmentStateLabel(equipmentState$ | async) }}
@@ -113,11 +116,11 @@
   ></ion-alert>
 
   <ion-toast
+    cssClass="component-control-toast"
     [isOpen]="toastOpen"
     [message]="toastMessage"
     [color]="toastColor"
     [buttons]="toastButtons"
-    duration="10000"
     position="top"
     (didDismiss)="closeToast()"
   ></ion-toast>

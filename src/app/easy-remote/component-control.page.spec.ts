@@ -14,20 +14,23 @@ describe('ComponentControlPage', () => {
   let router: Router;
   let connectionState$: BehaviorSubject<'subscribed' | 'disconnected'>;
   let deviceHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
+  let componentHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
   let equipmentState$: BehaviorSubject<'unknown' | 'ON' | 'OFF'>;
   let deviceCheckInProgress$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     connectionState$ = new BehaviorSubject<'subscribed' | 'disconnected'>('subscribed');
     deviceHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
+    componentHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
     equipmentState$ = new BehaviorSubject<'unknown' | 'ON' | 'OFF'>('unknown');
     deviceCheckInProgress$ = new BehaviorSubject<boolean>(false);
     mqttService = jasmine.createSpyObj<MqttService>(
       'MqttService',
-      ['publishComponentState', 'setActiveDevice', 'checkDeviceStatus'],
+      ['publishComponentState', 'setActiveComponent', 'checkDeviceStatus', 'checkComponentStatus'],
       {
         state$: connectionState$.asObservable(),
         deviceHealth$: deviceHealth$.asObservable(),
+        componentHealth$: componentHealth$.asObservable(),
         equipmentState$: equipmentState$.asObservable(),
         deviceCheckInProgress$: deviceCheckInProgress$.asObservable(),
       },
@@ -86,30 +89,33 @@ describe('ComponentControlPage', () => {
 
   it('publishes a component ON command', async () => {
     deviceHealth$.next('online');
+    componentHealth$.next('online');
     fixture.detectChanges();
-    mqttService.checkDeviceStatus.calls.reset();
+    mqttService.checkComponentStatus.calls.reset();
 
     component.requestStateChange('ON');
     fixture.detectChanges();
     await component.confirmStateChange();
 
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
-    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+    expect(mqttService.checkComponentStatus).toHaveBeenCalledWith('esp1', 'relay-1');
   });
 
   it('shows a confirmation alert before turning on or off', () => {
     deviceHealth$.next('online');
+    componentHealth$.next('online');
     component.requestStateChange('ON');
     fixture.detectChanges();
 
     expect(component.confirmAlertOpen).toBeTrue();
     expect(component.confirmHeader).toBe('Confirm Turn On');
     expect(component.confirmMessage).toContain('turn on Relay 1');
-    expect(mqttService.setActiveDevice).toHaveBeenCalledWith('esp1');
+    expect(mqttService.setActiveComponent).toHaveBeenCalledWith('esp1', 'relay-1');
   });
 
   it('uses a confirmation alert before turning off', () => {
     deviceHealth$.next('online');
+    componentHealth$.next('online');
     component.requestStateChange('OFF');
     fixture.detectChanges();
 
@@ -120,6 +126,7 @@ describe('ComponentControlPage', () => {
 
   it('disables action buttons when the device is not online', () => {
     deviceHealth$.next('offline');
+    componentHealth$.next('online');
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
@@ -134,14 +141,17 @@ describe('ComponentControlPage', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Last Equipment State');
     expect(fixture.nativeElement.textContent).toContain('OFF');
+    expect(fixture.nativeElement.textContent).toContain('last known state of the equipment');
   });
 
   it('automatically refreshes device health while the page is open', fakeAsync(() => {
     mqttService.checkDeviceStatus.calls.reset();
+    mqttService.checkComponentStatus.calls.reset();
 
     tick(30000);
 
     expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+    expect(mqttService.checkComponentStatus).toHaveBeenCalledWith('esp1', 'relay-1');
     component.ngOnDestroy();
     discardPeriodicTasks();
   }));

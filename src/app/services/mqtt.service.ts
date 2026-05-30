@@ -79,15 +79,22 @@ export class MqttService implements OnDestroy {
   private readonly stateSubject = new BehaviorSubject<MqttConnectionState>('disconnected');
   private readonly subscriptionSubject = new BehaviorSubject<boolean>(false);
   private readonly deviceHealthSubject = new BehaviorSubject<DeviceHealthState>('unknown');
+  private readonly componentHealthSubject = new BehaviorSubject<DeviceHealthState>('unknown');
   private readonly equipmentStateSubject = new BehaviorSubject<EquipmentState>('unknown');
   private readonly deviceLastSeenSubject = new BehaviorSubject<string | null>(null);
+  private readonly componentLastSeenSubject = new BehaviorSubject<string | null>(null);
   private readonly deviceCheckInProgressSubject = new BehaviorSubject<boolean>(false);
+  private readonly componentCheckInProgressSubject = new BehaviorSubject<boolean>(false);
   private readonly brokerUrl = `${this.websocketProtocol}://${this.mqttConfig.host}:${this.mqttConfig.websocketPort}${this.mqttConfig.path}`;
   private activeDeviceCode: string | null = null;
+  private activeComponentCode: string | null = null;
   private activeSubscribeTopics: string[] = [];
   private deviceCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private componentCheckTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private pendingHealthCheck = false;
+  private pendingComponentHealthCheck = false;
   private lastDeviceCheckRequestedAt: number | null = null;
+  private lastComponentCheckRequestedAt: number | null = null;
 
   readonly brokerHost = this.mqttConfig.host;
   readonly brokerPort = this.mqttConfig.websocketPort;
@@ -95,9 +102,12 @@ export class MqttService implements OnDestroy {
   readonly state$ = this.stateSubject.asObservable();
   readonly subscribed$ = this.subscriptionSubject.asObservable();
   readonly deviceHealth$ = this.deviceHealthSubject.asObservable();
+  readonly componentHealth$ = this.componentHealthSubject.asObservable();
   readonly equipmentState$ = this.equipmentStateSubject.asObservable();
   readonly deviceLastSeen$ = this.deviceLastSeenSubject.asObservable();
+  readonly componentLastSeen$ = this.componentLastSeenSubject.asObservable();
   readonly deviceCheckInProgress$ = this.deviceCheckInProgressSubject.asObservable();
+  readonly componentCheckInProgress$ = this.componentCheckInProgressSubject.asObservable();
 
   private client: MqttClient | null = null;
 
@@ -111,6 +121,7 @@ export class MqttService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.clearDeviceCheckTimeout();
+    this.clearComponentCheckTimeout();
     this.client?.end(true);
   }
 
@@ -123,17 +134,24 @@ export class MqttService implements OnDestroy {
 
     const previousTopics = this.activeSubscribeTopics;
     this.activeDeviceCode = normalizedCode;
+    this.activeComponentCode = null;
     const { eventTopic } = this.resolveTopics(normalizedCode);
     const nextTopics = [eventTopic, this.sharedEventTopic];
     this.activeSubscribeTopics = nextTopics;
     this.subscriptionSubject.next(false);
     this.deviceHealthSubject.next('unknown');
+    this.componentHealthSubject.next('unknown');
     this.equipmentStateSubject.next('unknown');
     this.deviceLastSeenSubject.next(null);
+    this.componentLastSeenSubject.next(null);
     this.deviceCheckInProgressSubject.next(false);
+    this.componentCheckInProgressSubject.next(false);
     this.pendingHealthCheck = false;
+    this.pendingComponentHealthCheck = false;
     this.lastDeviceCheckRequestedAt = null;
+    this.lastComponentCheckRequestedAt = null;
     this.clearDeviceCheckTimeout();
+    this.clearComponentCheckTimeout();
 
     if (!this.client) {
       return;
@@ -150,6 +168,32 @@ export class MqttService implements OnDestroy {
     if (this.stateSubject.value === 'connected' || this.stateSubject.value === 'subscribed') {
       this.subscribeToActiveDevice();
     }
+  }
+
+  setActiveComponent(deviceCode: string, componentCode: string): void {
+    const normalizedDeviceCode = deviceCode.trim();
+    const normalizedComponentCode = componentCode.trim();
+
+    if (!normalizedDeviceCode || !normalizedComponentCode) {
+      return;
+    }
+
+    const deviceChanged = normalizedDeviceCode !== this.activeDeviceCode;
+    const componentChanged = normalizedComponentCode !== this.activeComponentCode;
+
+    this.setActiveDevice(normalizedDeviceCode);
+
+    if (!deviceChanged && !componentChanged) {
+      return;
+    }
+
+    this.activeComponentCode = normalizedComponentCode;
+    this.componentHealthSubject.next('unknown');
+    this.componentLastSeenSubject.next(null);
+    this.componentCheckInProgressSubject.next(false);
+    this.pendingComponentHealthCheck = false;
+    this.lastComponentCheckRequestedAt = null;
+    this.clearComponentCheckTimeout();
   }
 
   publishState(deviceCode: string, state: 'ON' | 'OFF'): Promise<void> {
@@ -232,7 +276,7 @@ export class MqttService implements OnDestroy {
       return Promise.reject(new Error('Component code is required.'));
     }
 
-    this.setActiveDevice(normalizedDeviceCode);
+    this.setActiveComponent(normalizedDeviceCode, normalizedComponentCode);
 
     const { commandTopic } = this.resolveTopics(normalizedDeviceCode);
     const payload = JSON.stringify({
@@ -297,6 +341,38 @@ export class MqttService implements OnDestroy {
     }
 
     return this.publishDeviceCheck(normalizedCode);
+  }
+
+  checkComponentStatus(deviceCode: string, componentCode: string): Promise<void> {
+    const normalizedDeviceCode = deviceCode.trim();
+    const normalizedComponentCode = componentCode.trim();
+
+    if (!normalizedDeviceCode) {
+      return Promise.reject(new Error('Device code is required.'));
+    }
+
+    if (!normalizedComponentCode) {
+      return Promise.reject(new Error('Component code is required.'));
+    }
+
+    this.setActiveComponent(normalizedDeviceCode, normalizedComponentCode);
+    this.componentHealthSubject.next('checking');
+    this.componentCheckInProgressSubject.next(true);
+    this.pendingComponentHealthCheck = true;
+    this.lastComponentCheckRequestedAt = null;
+    this.clearComponentCheckTimeout();
+
+    if (!this.client) {
+      this.componentHealthSubject.next('offline');
+      this.componentCheckInProgressSubject.next(false);
+      return Promise.reject(new Error('MQTT client is unavailable'));
+    }
+
+    if (this.stateSubject.value !== 'connected' && this.stateSubject.value !== 'subscribed') {
+      return Promise.resolve();
+    }
+
+    return this.publishComponentCheck(normalizedDeviceCode, normalizedComponentCode);
   }
 
   private createClient(): MqttClient | null {
@@ -467,6 +543,10 @@ export class MqttService implements OnDestroy {
       if (this.pendingHealthCheck) {
         void this.publishDeviceCheck(activeDeviceCode);
       }
+
+      if (this.pendingComponentHealthCheck && this.activeComponentCode) {
+        void this.publishComponentCheck(activeDeviceCode, this.activeComponentCode);
+      }
     });
   }
 
@@ -518,6 +598,55 @@ export class MqttService implements OnDestroy {
     });
   }
 
+  private publishComponentCheck(deviceCode: string, componentCode: string): Promise<void> {
+    const client = this.client;
+
+    if (!client) {
+      this.componentHealthSubject.next('offline');
+      this.componentCheckInProgressSubject.next(false);
+      return Promise.reject(new Error('MQTT client is unavailable'));
+    }
+
+    const { commandTopic } = this.resolveTopics(deviceCode);
+    const requestTimestamp = new Date().toISOString();
+    const payload = JSON.stringify({
+      target: 'component',
+      component: componentCode,
+      state: 'HEALTH',
+      timestamp: requestTimestamp,
+    });
+    this.logOutgoingPublish('Requesting component status', commandTopic, payload);
+
+    return new Promise<void>((resolve, reject) => {
+      client.publish(commandTopic, payload, { qos: 0 }, (error?: Error) => {
+        if (error) {
+          this.componentHealthSubject.next('offline');
+          this.componentCheckInProgressSubject.next(false);
+          this.pendingComponentHealthCheck = false;
+          this.addLog({
+            direction: 'error',
+            message: 'Failed to request component status',
+            payload: error.message,
+            topic: commandTopic,
+          });
+          reject(error);
+          return;
+        }
+
+        this.pendingComponentHealthCheck = false;
+        this.lastComponentCheckRequestedAt = Date.parse(requestTimestamp);
+        this.armComponentCheckTimeout(deviceCode, componentCode);
+        this.addLog({
+          direction: 'sent',
+          message: 'Requested component status',
+          payload,
+          topic: commandTopic,
+        });
+        resolve();
+      });
+    });
+  }
+
   private armDeviceCheckTimeout(deviceCode: string): void {
     this.clearDeviceCheckTimeout();
 
@@ -538,10 +667,37 @@ export class MqttService implements OnDestroy {
     }, this.deviceCheckTimeoutMs);
   }
 
+  private armComponentCheckTimeout(deviceCode: string, componentCode: string): void {
+    this.clearComponentCheckTimeout();
+
+    this.componentCheckTimeoutId = setTimeout(() => {
+      if (this.activeDeviceCode !== deviceCode || this.activeComponentCode !== componentCode) {
+        return;
+      }
+
+      this.componentHealthSubject.next('offline');
+      this.componentCheckInProgressSubject.next(false);
+      this.pendingComponentHealthCheck = false;
+      this.lastComponentCheckRequestedAt = null;
+      this.addLog({
+        direction: 'status',
+        message: 'Component status check timed out',
+        topic: this.resolveTopics(deviceCode).eventTopic,
+      });
+    }, this.deviceCheckTimeoutMs);
+  }
+
   private clearDeviceCheckTimeout(): void {
     if (this.deviceCheckTimeoutId) {
       clearTimeout(this.deviceCheckTimeoutId);
       this.deviceCheckTimeoutId = null;
+    }
+  }
+
+  private clearComponentCheckTimeout(): void {
+    if (this.componentCheckTimeoutId) {
+      clearTimeout(this.componentCheckTimeoutId);
+      this.componentCheckTimeoutId = null;
     }
   }
 
@@ -562,27 +718,52 @@ export class MqttService implements OnDestroy {
       return;
     }
 
-    if (
-      packet?.retain &&
-      parsedMessage.target?.trim().toLowerCase() === 'device' &&
-      parsedMessage.state?.trim().toUpperCase() === 'ONLINE' &&
-      !parsedMessage.timestamp
-    ) {
+    if (packet?.retain && !parsedMessage.timestamp) {
       return;
     }
 
-    this.clearDeviceCheckTimeout();
-    this.pendingHealthCheck = false;
-    this.lastDeviceCheckRequestedAt = null;
-    this.deviceHealthSubject.next('online');
     const normalizedState = parsedMessage.state?.trim().toUpperCase();
+    const normalizedTarget = parsedMessage.target?.trim().toLowerCase();
+
+    if (
+      normalizedTarget === 'component' &&
+      parsedMessage.component?.trim().toLowerCase() === this.activeComponentCode?.trim().toLowerCase() &&
+      (normalizedState === 'ON' || normalizedState === 'OFF')
+    ) {
+      this.clearComponentCheckTimeout();
+      this.pendingComponentHealthCheck = false;
+      this.lastComponentCheckRequestedAt = null;
+      this.componentHealthSubject.next('online');
+      this.componentCheckInProgressSubject.next(false);
+      this.componentLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+      this.deviceHealthSubject.next('online');
+      this.clearDeviceCheckTimeout();
+      this.pendingHealthCheck = false;
+      this.lastDeviceCheckRequestedAt = null;
+      this.deviceCheckInProgressSubject.next(false);
+      this.equipmentStateSubject.next(normalizedState);
+      this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+      return;
+    }
+
+    if (
+      normalizedTarget !== 'component' &&
+      (normalizedTarget === 'device' ||
+        normalizedState === 'ONLINE' ||
+        normalizedState === 'ON' ||
+        normalizedState === 'OFF')
+    ) {
+      this.clearDeviceCheckTimeout();
+      this.pendingHealthCheck = false;
+      this.lastDeviceCheckRequestedAt = null;
+      this.deviceHealthSubject.next('online');
+      this.deviceCheckInProgressSubject.next(false);
+      this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+    }
 
     if (normalizedState === 'ON' || normalizedState === 'OFF') {
       this.equipmentStateSubject.next(normalizedState);
     }
-
-    this.deviceCheckInProgressSubject.next(false);
-    this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
   }
 
   private parseDeviceStatusMessage(payload: string): DeviceStatusMessage | null {
