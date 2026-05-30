@@ -724,10 +724,12 @@ export class MqttService implements OnDestroy {
 
     const normalizedState = parsedMessage.state?.trim().toUpperCase();
     const normalizedTarget = parsedMessage.target?.trim().toLowerCase();
+    const isActiveComponentMessage =
+      normalizedTarget === 'component' &&
+      parsedMessage.component?.trim().toLowerCase() === this.activeComponentCode?.trim().toLowerCase();
 
     if (
-      normalizedTarget === 'component' &&
-      parsedMessage.component?.trim().toLowerCase() === this.activeComponentCode?.trim().toLowerCase() &&
+      isActiveComponentMessage &&
       (normalizedState === 'ON' || normalizedState === 'OFF')
     ) {
       this.clearComponentCheckTimeout();
@@ -761,9 +763,6 @@ export class MqttService implements OnDestroy {
       this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
     }
 
-    if (normalizedState === 'ON' || normalizedState === 'OFF') {
-      this.equipmentStateSubject.next(normalizedState);
-    }
   }
 
   private parseDeviceStatusMessage(payload: string): DeviceStatusMessage | null {

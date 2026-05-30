@@ -82,8 +82,8 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   private routeComponentCode = '';
   currentDeviceHealth: DeviceHealthState = 'unknown';
   currentComponentHealth: DeviceHealthState = 'unknown';
+  currentEquipmentState: EquipmentState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
-  private autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly subscriptions = new Subscription();
@@ -100,7 +100,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.stopAutoRefresh();
     this.subscriptions.unsubscribe();
   }
 
@@ -113,6 +112,11 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.componentHealth$.subscribe((state) => {
         this.currentComponentHealth = state;
+      }),
+    );
+    this.subscriptions.add(
+      this.equipmentState$.subscribe((state) => {
+        this.currentEquipmentState = state;
       }),
     );
     this.subscriptions.add(
@@ -183,10 +187,9 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     try {
       await this.mqttService.publishComponentState(this.device.code, this.component.code, state);
       this.presentToast(
-        `TURN ${state} command sent for ${this.component.name}.\nChecking the component response now.`,
+        `TURN ${state} command sent for ${this.component.name}.`,
         'success',
       );
-      void this.refreshComponentStatus();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       this.presentToast(message, 'danger');
@@ -222,11 +225,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   get canSendDeviceCommand(): boolean {
-    return (
-      this.isServerConnected(this.currentConnectionState) &&
-      this.currentDeviceHealth === 'online' &&
-      this.currentComponentHealth === 'online'
-    );
+    return this.isServerConnected(this.currentConnectionState);
   }
 
   get confirmHeader(): string {
@@ -301,47 +300,42 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     }
   }
 
-  getComponentStatusLabel(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'Online';
-      case 'offline':
-        return 'Offline';
-      case 'checking':
-        return 'Checking...';
-      case 'unknown':
-      default:
-        return 'Unknown';
+  getLastEquipmentStateLabel(
+    healthState: DeviceHealthState | null,
+    equipmentState: EquipmentState | null,
+  ): string {
+    if (healthState === 'checking') {
+      return 'Checking...';
     }
-  }
 
-  getComponentStatusClass(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'status-connected';
-      case 'checking':
-      case 'unknown':
-        return 'status-pending';
-      case 'offline':
-      default:
-        return 'status-disconnected';
+    if (healthState === 'offline') {
+      return 'Offline';
     }
-  }
 
-  getEquipmentStateLabel(state: EquipmentState | null): string {
-    switch (state) {
+    switch (equipmentState) {
       case 'ON':
         return 'ON';
       case 'OFF':
         return 'OFF';
       case 'unknown':
       default:
-        return 'Unknown';
+        return healthState === 'unknown' ? 'Unknown' : 'Checking...';
     }
   }
 
-  getEquipmentStateClass(state: EquipmentState | null): string {
-    switch (state) {
+  getLastEquipmentStateClass(
+    healthState: DeviceHealthState | null,
+    equipmentState: EquipmentState | null,
+  ): string {
+    if (healthState === 'checking' || healthState === 'unknown') {
+      return 'status-pending';
+    }
+
+    if (healthState === 'offline') {
+      return 'status-disconnected';
+    }
+
+    switch (equipmentState) {
       case 'ON':
         return 'status-connected';
       case 'OFF':
@@ -349,26 +343,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       case 'unknown':
       default:
         return 'status-pending';
-    }
-  }
-
-  private startAutoRefresh(): void {
-    this.stopAutoRefresh();
-
-    if (!this.device) {
-      return;
-    }
-
-    this.autoRefreshIntervalId = setInterval(() => {
-      void this.refreshDeviceStatus();
-      void this.refreshComponentStatus();
-    }, this.device.autoCheckIntervalSeconds * 1000);
-  }
-
-  private stopAutoRefresh(): void {
-    if (this.autoRefreshIntervalId) {
-      clearInterval(this.autoRefreshIntervalId);
-      this.autoRefreshIntervalId = null;
     }
   }
 
@@ -428,7 +402,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     this.device = device;
     this.component = component;
     this.mqttService.setActiveComponent(device.code, component.code);
-    this.startAutoRefresh();
     return true;
   }
 }

@@ -1,4 +1,4 @@
-import { discardPeriodicTasks, fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 
@@ -16,14 +16,12 @@ describe('ComponentControlPage', () => {
   let deviceHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
   let componentHealth$: BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>;
   let equipmentState$: BehaviorSubject<'unknown' | 'ON' | 'OFF'>;
-  let deviceCheckInProgress$: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     connectionState$ = new BehaviorSubject<'subscribed' | 'disconnected'>('subscribed');
     deviceHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
     componentHealth$ = new BehaviorSubject<'unknown' | 'online' | 'offline' | 'checking'>('unknown');
     equipmentState$ = new BehaviorSubject<'unknown' | 'ON' | 'OFF'>('unknown');
-    deviceCheckInProgress$ = new BehaviorSubject<boolean>(false);
     mqttService = jasmine.createSpyObj<MqttService>(
       'MqttService',
       ['publishComponentState', 'setActiveComponent', 'checkDeviceStatus', 'checkComponentStatus'],
@@ -32,11 +30,11 @@ describe('ComponentControlPage', () => {
         deviceHealth$: deviceHealth$.asObservable(),
         componentHealth$: componentHealth$.asObservable(),
         equipmentState$: equipmentState$.asObservable(),
-        deviceCheckInProgress$: deviceCheckInProgress$.asObservable(),
       },
     );
     mqttService.publishComponentState.and.resolveTo();
     mqttService.checkDeviceStatus.and.resolveTo();
+    mqttService.checkComponentStatus.and.resolveTo();
     deviceStore = jasmine.createSpyObj<DeviceStoreService>('DeviceStoreService', ['ready', 'findDevice']);
     deviceStore.ready.and.resolveTo();
     deviceStore.findDevice.and.returnValue({
@@ -89,21 +87,22 @@ describe('ComponentControlPage', () => {
 
   it('publishes a component ON command', async () => {
     deviceHealth$.next('online');
-    componentHealth$.next('online');
     fixture.detectChanges();
-    mqttService.checkComponentStatus.calls.reset();
 
     component.requestStateChange('ON');
     fixture.detectChanges();
     await component.confirmStateChange();
 
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
+  });
+
+  it('checks status when the page opens', () => {
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
     expect(mqttService.checkComponentStatus).toHaveBeenCalledWith('esp1', 'relay-1');
   });
 
   it('shows a confirmation alert before turning on or off', () => {
     deviceHealth$.next('online');
-    componentHealth$.next('online');
     component.requestStateChange('ON');
     fixture.detectChanges();
 
@@ -115,7 +114,6 @@ describe('ComponentControlPage', () => {
 
   it('uses a confirmation alert before turning off', () => {
     deviceHealth$.next('online');
-    componentHealth$.next('online');
     component.requestStateChange('OFF');
     fixture.detectChanges();
 
@@ -124,9 +122,8 @@ describe('ComponentControlPage', () => {
     expect(component.confirmMessage).toContain('turn off Relay 1');
   });
 
-  it('disables action buttons when the device is not online', () => {
-    deviceHealth$.next('offline');
-    componentHealth$.next('online');
+  it('disables action buttons when the server is disconnected', () => {
+    connectionState$.next('disconnected');
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
@@ -136,25 +133,21 @@ describe('ComponentControlPage', () => {
   });
 
   it('shows the last equipment state feedback', () => {
+    componentHealth$.next('online');
     equipmentState$.next('OFF');
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Last Equipment State');
     expect(fixture.nativeElement.textContent).toContain('OFF');
-    expect(fixture.nativeElement.textContent).toContain('last known state of the equipment');
+    expect(fixture.nativeElement.textContent).toContain('latest ON or OFF feedback');
   });
 
-  it('automatically refreshes device health while the page is open', fakeAsync(() => {
-    mqttService.checkDeviceStatus.calls.reset();
-    mqttService.checkComponentStatus.calls.reset();
+  it('shows checking while the component health check is pending', () => {
+    componentHealth$.next('checking');
+    fixture.detectChanges();
 
-    tick(30000);
-
-    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
-    expect(mqttService.checkComponentStatus).toHaveBeenCalledWith('esp1', 'relay-1');
-    component.ngOnDestroy();
-    discardPeriodicTasks();
-  }));
+    expect(fixture.nativeElement.textContent).toContain('Checking...');
+  });
 
   it('redirects away when the component cannot be found', async () => {
     deviceStore.findDevice.and.returnValue({

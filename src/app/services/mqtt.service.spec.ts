@@ -353,6 +353,32 @@ describe('MqttService', () => {
     subscription.unsubscribe();
   });
 
+  it('ignores component state from a different component', async () => {
+    service.setActiveComponent('esp1', 'equipment-1');
+    connect$.next();
+
+    let state = 'unknown';
+    const subscription = service.equipmentState$.subscribe((value) => {
+      state = value;
+    });
+
+    message$.next({
+      topic: 'devices/smart-easy-ph-device/event',
+      payload: new TextEncoder().encode(
+        JSON.stringify({
+          target: 'component',
+          component: 'equipment-2',
+          state: 'OFF',
+          deviceCode: 'smart-easy-ph-device',
+          timestamp: '2026-04-01T00:00:00.000Z',
+        }),
+      ),
+    });
+
+    expect(state).toBe('unknown');
+    subscription.unsubscribe();
+  });
+
   it('adds an error log entry when publishing fails', async () => {
     mockClient.publish.and.callFake(((...args: unknown[]) => {
       const callback = args[args.length - 1];

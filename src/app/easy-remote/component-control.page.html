@@ -65,8 +65,11 @@
               This is the last known state of the equipment.
             </p>
           </div>
-          <div class="status-pill" [ngClass]="getEquipmentStateClass(equipmentState$ | async)">
-            {{ getEquipmentStateLabel(equipmentState$ | async) }}
+          <div
+            class="status-pill"
+            [ngClass]="getLastEquipmentStateClass(componentHealth$ | async, equipmentState$ | async)"
+          >
+            {{ getLastEquipmentStateLabel(componentHealth$ | async, equipmentState$ | async) }}
           </div>
         </div>
       </section>
