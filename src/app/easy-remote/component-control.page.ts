@@ -84,6 +84,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   currentComponentHealth: DeviceHealthState = 'unknown';
   currentEquipmentState: EquipmentState = 'unknown';
   currentConnectionState: MqttConnectionState = 'disconnected';
+  private commandHealthTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private readonly subscriptions = new Subscription();
@@ -100,6 +101,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearCommandHealthTimeout();
     this.subscriptions.unsubscribe();
   }
 
@@ -112,11 +114,17 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.componentHealth$.subscribe((state) => {
         this.currentComponentHealth = state;
+        if (state === 'online') {
+          this.clearCommandHealthTimeout();
+        }
       }),
     );
     this.subscriptions.add(
       this.equipmentState$.subscribe((state) => {
         this.currentEquipmentState = state;
+        if (state === 'ON' || state === 'OFF') {
+          this.clearCommandHealthTimeout();
+        }
       }),
     );
     this.subscriptions.add(
@@ -190,6 +198,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
         `TURN ${state} command sent for ${this.component.name}.`,
         'success',
       );
+      this.startCommandHealthFallback();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       this.presentToast(message, 'danger');
@@ -225,7 +234,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   }
 
   get canSendDeviceCommand(): boolean {
-    return this.isServerConnected(this.currentConnectionState);
+    return this.isServerConnected(this.currentConnectionState) && this.currentDeviceHealth === 'online';
   }
 
   get confirmHeader(): string {
@@ -366,6 +375,22 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
   private isServerConnected(state: string | null): boolean {
     return state === 'subscribed' || state === 'connected';
+  }
+
+  private startCommandHealthFallback(): void {
+    this.clearCommandHealthTimeout();
+
+    this.commandHealthTimeoutId = setTimeout(() => {
+      this.commandHealthTimeoutId = null;
+      void this.refreshDeviceStatus();
+    }, 5000);
+  }
+
+  private clearCommandHealthTimeout(): void {
+    if (this.commandHealthTimeoutId) {
+      clearTimeout(this.commandHealthTimeoutId);
+      this.commandHealthTimeoutId = null;
+    }
   }
 
   private async loadComponent(redirectOnMissing: boolean): Promise<boolean> {

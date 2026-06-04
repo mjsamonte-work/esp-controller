@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 
@@ -96,6 +96,20 @@ describe('ComponentControlPage', () => {
     expect(mqttService.publishComponentState).toHaveBeenCalledWith('esp1', 'relay-1', 'ON');
   });
 
+  it('checks device health if no response arrives after sending a command', fakeAsync(() => {
+    deviceHealth$.next('online');
+    fixture.detectChanges();
+    mqttService.checkDeviceStatus.calls.reset();
+
+    component.requestStateChange('ON');
+    fixture.detectChanges();
+    void component.confirmStateChange();
+
+    tick(5000);
+
+    expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
+  }));
+
   it('checks status when the page opens', () => {
     expect(mqttService.checkDeviceStatus).toHaveBeenCalledWith('esp1');
     expect(mqttService.checkComponentStatus).toHaveBeenCalledWith('esp1', 'relay-1');
@@ -124,6 +138,26 @@ describe('ComponentControlPage', () => {
 
   it('disables action buttons when the server is disconnected', () => {
     connectionState$.next('disconnected');
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
+
+    expect(buttons[0].disabled).toBeTrue();
+    expect(buttons[1].disabled).toBeTrue();
+  });
+
+  it('disables action buttons when the device is offline', () => {
+    deviceHealth$.next('offline');
+    fixture.detectChanges();
+
+    const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
+
+    expect(buttons[0].disabled).toBeTrue();
+    expect(buttons[1].disabled).toBeTrue();
+  });
+
+  it('disables action buttons when the device health is checking', () => {
+    deviceHealth$.next('checking');
     fixture.detectChanges();
 
     const buttons = fixture.nativeElement.querySelectorAll('.action-button') as NodeListOf<HTMLButtonElement>;
