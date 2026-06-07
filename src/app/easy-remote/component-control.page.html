@@ -77,33 +77,22 @@
       <section class="action-panel">
         <div class="action-panel-header">
           <p class="section-label">Actions</p>
-          <p class="status-help">Choose the component state you want to send.</p>
+          <p class="status-help">Tap once to switch the component to the opposite state.</p>
         </div>
 
         <div class="remote-actions">
           <ion-button
-            class="action-button on-button"
+            class="action-button switch-button"
             expand="block"
+            [color]="switchButtonColor"
             [disabled]="isSubmitting || !canSendDeviceCommand"
-            (click)="requestStateChange('ON')"
+            (click)="requestSwitch()"
           >
-            <ng-container *ngIf="submittingState === 'ON'; else onLabel">
+            <ng-container *ngIf="isSubmitting; else switchLabel">
               <ion-spinner name="crescent"></ion-spinner>
-              <span>TURNING ON...</span>
+              <span>{{ switchButtonBusyLabel }}</span>
             </ng-container>
-            <ng-template #onLabel>TURN ON</ng-template>
-          </ion-button>
-          <ion-button
-            class="action-button off-button"
-            expand="block"
-            [disabled]="isSubmitting || !canSendDeviceCommand"
-            (click)="requestStateChange('OFF')"
-          >
-            <ng-container *ngIf="submittingState === 'OFF'; else offLabel">
-              <ion-spinner name="crescent"></ion-spinner>
-              <span>TURNING OFF...</span>
-            </ng-container>
-            <ng-template #offLabel>TURN OFF</ng-template>
+            <ng-template #switchLabel>{{ switchButtonLabel }}</ng-template>
           </ion-button>
         </div>
       </section>

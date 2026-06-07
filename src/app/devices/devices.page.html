@@ -58,9 +58,6 @@
                 <strong>{{ device.name }}</strong>
                 <p>Code: {{ device.code }} | Location: {{ device.location }}</p>
                 <p *ngIf="device.hostname || device.model || device.firmwareVersion" class="device-provisioning-meta">
-                  <span *ngIf="device.hostname">{{ device.hostname }}</span>
-                  <span *ngIf="device.model">{{ device.model }}</span>
-                  <span *ngIf="device.firmwareVersion">FW {{ device.firmwareVersion }}</span>
                 </p>
               </ion-label>
               <div slot="end" class="device-arrow">

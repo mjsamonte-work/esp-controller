@@ -40,11 +40,17 @@ export class DeviceProvisioningService {
   }
 
   async getSetupDeviceInfo(): Promise<ProvisionedDeviceInfo> {
-    return this.getJson<ProvisionedDeviceInfo>(`${this.setupBaseUrl}/device-info`);
+    return this.getJson<ProvisionedDeviceInfo>(
+      `${this.setupBaseUrl}/device-info`,
+      'We could not reach the device hotspot. Reconnect to the device Wi-Fi, then tap Verify Device again.',
+    );
   }
 
   async scanWifiNetworks(): Promise<ProvisioningWifiNetwork[]> {
-    const response = await this.getJson<Esp32WifiScanResponse>(`${this.setupBaseUrl}/scan`);
+    const response = await this.getJson<Esp32WifiScanResponse>(
+      `${this.setupBaseUrl}/scan`,
+      'We could not read nearby Wi-Fi yet. Reconnect to the device hotspot, then tap Refresh.',
+    );
     const networks = Array.isArray(response) ? response : response.networks;
 
     if (!Array.isArray(networks)) {
@@ -70,7 +76,7 @@ export class DeviceProvisioningService {
     const response = await this.postJson<WifiSaveResponse>(`${this.setupBaseUrl}/save`, {
       ssid,
       password: credentials.password,
-    });
+    }, 'We could not send the Wi-Fi details. Reconnect to the device hotspot, then try again.');
 
     if (typeof response.connected !== 'boolean') {
       throw new Error('The device returned an invalid Wi-Fi connection response.');
@@ -82,7 +88,10 @@ export class DeviceProvisioningService {
   async verifyProvisionedDevice(deviceId: string): Promise<ProvisionedDeviceDraft> {
     const normalizedDeviceId = deviceId.trim();
     const hostname = `${normalizedDeviceId.toLowerCase()}.local`;
-    const info = await this.getJson<ProvisionedDeviceInfo>(this.buildHomeDeviceInfoUrl(hostname));
+    const info = await this.getJson<ProvisionedDeviceInfo>(
+      this.buildHomeDeviceInfoUrl(hostname),
+      'We could not find the device on your home Wi-Fi yet. Make sure the phone and device are on the same network.',
+    );
 
     this.assertMatchingDeviceId(normalizedDeviceId, info.deviceId);
 
@@ -117,40 +126,56 @@ export class DeviceProvisioningService {
     return template.replace('{hostname}', hostname);
   }
 
-  private async getJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    });
+  private async getJson<T>(url: string, networkErrorMessage: string): Promise<T> {
+    let response: Response;
 
-    return this.readJsonResponse<T>(response);
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+    } catch {
+      throw new Error(networkErrorMessage);
+    }
+
+    return this.readJsonResponse<T>(response, networkErrorMessage);
   }
 
-  private async postJson<T>(url: string, payload: unknown): Promise<T> {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+  private async postJson<T>(url: string, payload: unknown, networkErrorMessage: string): Promise<T> {
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch {
+      throw new Error(networkErrorMessage);
+    }
 
     if (!response.ok) {
-      throw new Error(`ESP32 request failed with status ${response.status}.`);
+      throw new Error(networkErrorMessage);
     }
 
     return response.json() as Promise<T>;
   }
 
-  private async readJsonResponse<T>(response: Response): Promise<T> {
+  private async readJsonResponse<T>(response: Response, networkErrorMessage: string): Promise<T> {
     if (!response.ok) {
-      throw new Error(`ESP32 request failed with status ${response.status}.`);
+      throw new Error(networkErrorMessage);
     }
 
-    return response.json() as Promise<T>;
+    try {
+      return await response.json() as Promise<T>;
+    } catch {
+      throw new Error(networkErrorMessage);
+    }
   }
 
   private normalizeOptionalText(value: string | undefined): string | undefined {

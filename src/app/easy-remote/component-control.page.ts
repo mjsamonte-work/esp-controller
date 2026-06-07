@@ -159,13 +159,13 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     await this.refreshComponentStatus();
   }
 
-  requestStateChange(state: 'ON' | 'OFF'): void {
+  requestSwitch(): void {
     if (!this.device || !this.component || !this.canSendDeviceCommand || this.isSubmitting) {
       return;
     }
 
     this.mqttService.setActiveComponent(this.device.code, this.component.code);
-    this.pendingState = state;
+    this.pendingState = this.getNextState();
     this.confirmAlertOpen = true;
   }
 
@@ -194,10 +194,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
     try {
       await this.mqttService.publishComponentState(this.device.code, this.component.code, state);
-      this.presentToast(
-        `TURN ${state} command sent for ${this.component.name}.`,
-        'success',
-      );
+      this.presentToast(`Switch command sent for ${this.component.name}.`, 'success');
       this.startCommandHealthFallback();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
@@ -239,13 +236,29 @@ export class ComponentControlPage implements OnInit, OnDestroy {
 
   get confirmHeader(): string {
     return this.pendingState === 'ON'
-      ? 'Confirm Turn On'
-      : 'Confirm Turn Off';
+      ? 'Confirm Switch On'
+      : 'Confirm Switch Off';
   }
 
   get confirmMessage(): string {
     const action = this.pendingState === 'ON' ? 'turn on' : 'turn off';
-    return `Are you sure you want to ${action} ${this.componentName || this.componentCode}?`;
+    return `This will ${action} ${this.componentName || this.componentCode}.`;
+  }
+
+  get switchButtonLabel(): string {
+    return 'SWITCH';
+  }
+
+  get switchButtonBusyLabel(): string {
+    return 'SWITCHING...';
+  }
+
+  get switchButtonColor(): 'success' | 'danger' | 'warning' {
+    if (this.isSubmitting) {
+      return 'warning';
+    }
+
+    return this.getNextState() === 'ON' ? 'success' : 'danger';
   }
 
   async refreshDeviceStatus(): Promise<void> {
@@ -391,6 +404,10 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       clearTimeout(this.commandHealthTimeoutId);
       this.commandHealthTimeoutId = null;
     }
+  }
+
+  private getNextState(): 'ON' | 'OFF' {
+    return this.currentEquipmentState === 'ON' ? 'OFF' : 'ON';
   }
 
   private async loadComponent(redirectOnMissing: boolean): Promise<boolean> {
