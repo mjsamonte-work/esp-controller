@@ -1,0 +1,242 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" routerLink="/devices" aria-label="Back to devices">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>SCAN DEVICE</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="device-form-shell">
+    <div class="device-form-stage">
+      <ion-card class="form-card progress-card">
+        <ion-card-content>
+          <div class="progress-copy">
+            <p class="section-label">Step {{ currentStepNumber }} of 3</p>
+            <strong>{{ stepHeading }}</strong>
+          </div>
+          <ion-progress-bar [value]="progressValue"></ion-progress-bar>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="form-card provisioning-card" *ngIf="step === 'scan'">
+        <ion-card-content>
+          <p class="section-label">Device identity</p>
+          <h2>{{ stepHeading }}</h2>
+
+          <div class="scanner-frame">
+            <video #scannerVideo muted playsinline></video>
+          </div>
+
+          <div class="provisioning-actions">
+            <ion-button fill="outline" type="button" [disabled]="isBusy || isScanning" (click)="startScanner()">
+              <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+              START SCAN
+            </ion-button>
+            <ion-button fill="outline" type="button" [disabled]="!isScanning" (click)="stopScanner()">
+              STOP
+            </ion-button>
+          </div>
+
+          <form [formGroup]="qrForm" class="device-form" (ngSubmit)="useQrPayload()">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">QR Payload or Device ID</ion-label>
+              <ion-input
+                formControlName="qrPayload"
+                placeholder="CAM-8F2A1B"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="showQrError">Device QR payload is required.</ion-text>
+
+            <ion-button class="submit-button" expand="block" type="submit" [disabled]="isBusy">
+              <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+              CONTINUE
+            </ion-button>
+          </form>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="form-card provisioning-card" *ngIf="step === 'connect'">
+        <ion-card-content>
+          <p class="section-label">Device hotspot</p>
+          <h2>{{ stepHeading }}</h2>
+          <p class="step-help">
+            Connect your phone to the device hotspot before verifying. Leave this screen open while you switch Wi-Fi.
+          </p>
+
+          <ion-list lines="none" class="provisioning-list">
+            <ion-item lines="none" class="input-item">
+              <ion-label>
+                <p>SSID</p>
+                <strong>{{ hotspotSsid }}</strong>
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" class="input-item">
+              <ion-label>
+                <p>Password</p>
+                <strong>12345678</strong>
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" class="input-item">
+              <ion-label>
+                <p>Setup Endpoint</p>
+                <strong>{{ setupEndpoint }}</strong>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+
+          <ion-button
+            class="submit-button"
+            expand="block"
+            type="button"
+            [disabled]="!canVerifySetupDevice"
+            (click)="verifySetupDevice()"
+          >
+            <ion-icon slot="start" name="checkmark-circle-outline"></ion-icon>
+            VERIFY DEVICE
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="form-card provisioning-card" *ngIf="step === 'wifi'">
+        <ion-card-content>
+          <p class="section-label">Network setup</p>
+          <h2>{{ stepHeading }}</h2>
+          <p class="step-help">
+            Pick the Wi-Fi network, enter the password, then save the device details in one step.
+          </p>
+
+          <div [formGroup]="wifiForm" class="device-form">
+            <div class="wifi-network-picker">
+              <div class="picker-header">
+                <p class="field-label">Wi-Fi network</p>
+                <ion-button
+                  class="refresh-button"
+                  fill="clear"
+                  type="button"
+                  [disabled]="isBusy"
+                  (click)="loadWifiNetworks()"
+                >
+                  <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                  REFRESH
+                </ion-button>
+              </div>
+
+              <div class="wifi-network-list" *ngIf="wifiNetworks.length > 0; else noNetworks">
+                <button
+                  class="wifi-network-option"
+                  [class.is-selected]="isSelectedWifiNetwork(network)"
+                  type="button"
+                  *ngFor="let network of wifiNetworks"
+                  (click)="selectWifiNetwork(network)"
+                >
+                  <span>
+                    <strong>{{ network.ssid }}</strong>
+                    <small>{{ network.secure ? 'Secured' : 'Open' }}</small>
+                  </span>
+                  <span class="network-rssi" *ngIf="network.rssi !== undefined">{{ network.rssi }} dBm</span>
+                </button>
+              </div>
+
+              <ng-template #noNetworks>
+                <div class="wifi-empty-state">
+                  Scanning for available networks...
+                </div>
+              </ng-template>
+            </div>
+
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Wi-Fi SSID</ion-label>
+              <ion-input
+                formControlName="ssid"
+                placeholder="Wi-Fi network name"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="showSsidError">Select a Wi-Fi network.</ion-text>
+
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Wi-Fi Password</ion-label>
+              <ion-input
+                formControlName="password"
+                type="password"
+                placeholder="Enter the Wi-Fi password"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="connectionStatusMessage">
+              {{ connectionStatusMessage }}
+            </ion-text>
+
+          </div>
+
+          <p class="section-label section-spacer">Device details</p>
+
+          <ion-list lines="none" class="provisioning-list">
+            <ion-item lines="none" class="input-item">
+              <ion-label>
+                <p>Device code</p>
+                <strong>{{ scannedDeviceId }}</strong>
+              </ion-label>
+            </ion-item>
+            <ion-item lines="none" class="input-item">
+              <ion-label>
+                <p>Device address</p>
+                <strong>{{ hostname }}</strong>
+              </ion-label>
+            </ion-item>
+          </ion-list>
+
+          <div [formGroup]="saveForm" class="device-form">
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Device name</ion-label>
+              <ion-input
+                formControlName="name"
+                placeholder="Living Room Camera"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="showNameError">Give this device a name so it is easy to find later.</ion-text>
+
+            <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Location</ion-label>
+              <ion-input
+                formControlName="location"
+                placeholder="Living Room"
+                autocomplete="off"
+              ></ion-input>
+            </ion-item>
+            <ion-text color="danger" *ngIf="showLocationError">Tell us where this device is installed.</ion-text>
+
+            <ion-button
+              class="submit-button"
+              expand="block"
+              type="button"
+              [disabled]="isBusy"
+              (click)="connectAndSaveDevice()"
+            >
+              <ion-icon slot="start" name="save-outline"></ion-icon>
+              CONNECT & SAVE
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="2200"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

@@ -3,10 +3,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { addOutline, chevronBackOutline, saveOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, qrCodeOutline, saveOutline } from 'ionicons/icons';
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+  DeviceType,
   type AutoCheckIntervalSeconds,
 } from '../models/device.model';
 import {
@@ -70,6 +71,10 @@ export class DeviceFormPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    type: new FormControl<DeviceType>(DeviceType.EasySwitch, {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
     autoCheckIntervalSeconds: new FormControl<AutoCheckIntervalSeconds>(
       DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
       {
@@ -91,6 +96,7 @@ export class DeviceFormPage implements OnInit {
     addIcons({
       'add-outline': addOutline,
       'chevron-back-outline': chevronBackOutline,
+      'qr-code-outline': qrCodeOutline,
       'save-outline': saveOutline,
     });
   }
@@ -120,6 +126,7 @@ export class DeviceFormPage implements OnInit {
       name: device.name,
       code: device.code,
       location: device.location,
+      type: device.type,
       autoCheckIntervalSeconds: device.autoCheckIntervalSeconds,
     });
     this.deviceForm.controls.code.disable();
@@ -139,6 +146,7 @@ export class DeviceFormPage implements OnInit {
         await this.deviceStore.updateDevice(rawValue.code, {
           name: rawValue.name,
           location: rawValue.location,
+          type: rawValue.type,
           autoCheckIntervalSeconds: rawValue.autoCheckIntervalSeconds,
         });
       } else {
@@ -154,6 +162,14 @@ export class DeviceFormPage implements OnInit {
       const message = error instanceof Error ? error.message : 'Unable to save the device.';
       this.presentToast(message, 'danger');
     }
+  }
+
+  scanDevice(): void {
+    if (this.isEditMode) {
+      return;
+    }
+
+    void this.router.navigate(['/devices/scan']);
   }
 
   closeToast(): void {

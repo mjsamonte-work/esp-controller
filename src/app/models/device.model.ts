@@ -7,10 +7,42 @@ export interface DeviceComponent {
   code: string;
 }
 
+export enum DeviceType {
+  EasySwitch = 'EASY_SWITCH',
+  EasyMonitoring = 'EASY_MONITORING',
+}
+
+export const DEFAULT_EASY_SWITCH_COMPONENTS: DeviceComponent[] = [
+  {
+    name: 'Equipment 1',
+    code: 'equipment-1',
+  },
+  {
+    name: 'Equipment 2',
+    code: 'equipment-2',
+  },
+  {
+    name: 'Equipment 3',
+    code: 'equipment-3',
+  },
+  {
+    name: 'Equipment 4',
+    code: 'equipment-4',
+  },
+  {
+    name: 'Equipment 5',
+    code: 'equipment-5',
+  },
+];
+
 export interface Device {
   name: string;
   code: string;
   location: string;
+  type: DeviceType;
+  hostname?: string;
+  model?: string;
+  firmwareVersion?: string;
   autoCheckIntervalSeconds: AutoCheckIntervalSeconds;
   components?: DeviceComponent[];
 }

@@ -9,6 +9,7 @@ import {
   chevronForwardOutline,
   createOutline,
   eyeOutline,
+  qrCodeOutline,
   trashOutline,
 } from 'ionicons/icons';
 import {
@@ -60,6 +61,7 @@ import { DeviceStoreService } from '../services/device-store.service';
 })
 export class DevicesPage implements OnInit {
   showAddDeviceAction = false;
+  showScanDeviceAction = true;
   showImportDeviceAction = false;
   showEditDeviceAction = true;
   showDeleteDeviceAction = false;
@@ -94,6 +96,7 @@ export class DevicesPage implements OnInit {
       'chevron-forward-outline': chevronForwardOutline,
       'create-outline': createOutline,
       'eye-outline': eyeOutline,
+      'qr-code-outline': qrCodeOutline,
       'trash-outline': trashOutline,
     });
   }
@@ -123,6 +126,14 @@ export class DevicesPage implements OnInit {
     }
 
     void this.router.navigate(['/devices/import']);
+  }
+
+  scanDevice(): void {
+    if (!this.showScanDeviceAction) {
+      return;
+    }
+
+    void this.router.navigate(['/devices/scan']);
   }
 
   openDevice(device: Device): void {

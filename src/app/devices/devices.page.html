@@ -31,6 +31,11 @@
             ADD NEW DEVICE
           </ion-button>
 
+          <ion-button *ngIf="showScanDeviceAction" class="add-device-button" expand="block" (click)="scanDevice()">
+            <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+            SCAN DEVICE QR
+          </ion-button>
+
           <ion-button
             *ngIf="showImportDeviceAction"
             class="add-device-button import-device-button"
@@ -52,6 +57,11 @@
               <ion-label>
                 <strong>{{ device.name }}</strong>
                 <p>Code: {{ device.code }} | Location: {{ device.location }}</p>
+                <p *ngIf="device.hostname || device.model || device.firmwareVersion" class="device-provisioning-meta">
+                  <span *ngIf="device.hostname">{{ device.hostname }}</span>
+                  <span *ngIf="device.model">{{ device.model }}</span>
+                  <span *ngIf="device.firmwareVersion">FW {{ device.firmwareVersion }}</span>
+                </p>
               </ion-label>
               <div slot="end" class="device-arrow">
                 <ion-icon name="chevron-forward-outline"></ion-icon>

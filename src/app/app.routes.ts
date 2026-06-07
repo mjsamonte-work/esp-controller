@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./devices/device-import.page').then((m) => m.DeviceImportPage),
   },
   {
+    path: 'devices/scan',
+    loadComponent: () => import('./devices/device-scan.page').then((m) => m.DeviceScanPage),
+  },
+  {
     path: 'devices/new',
     loadComponent: () => import('./devices/device-form.page').then((m) => m.DeviceFormPage),
   },
