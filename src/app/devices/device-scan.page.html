@@ -107,124 +107,137 @@
 
       <ion-card class="form-card provisioning-card" *ngIf="step === 'wifi'">
         <ion-card-content>
-          <p class="section-label">Network setup</p>
+          <p class="section-label">Wi-Fi setup</p>
           <h2>{{ stepHeading }}</h2>
           <p class="step-help">
             Pick the Wi-Fi network, enter the password, then save the device details in one step.
           </p>
 
-          <div [formGroup]="wifiForm" class="device-form">
-            <div class="wifi-network-picker">
-              <div class="picker-header">
-                <p class="field-label">Wi-Fi network</p>
-                <ion-button
-                  class="refresh-button"
-                  fill="clear"
-                  type="button"
-                  [disabled]="isBusy"
-                  (click)="loadWifiNetworks()"
-                >
-                  <ion-icon slot="start" name="refresh-outline"></ion-icon>
-                  REFRESH
-                </ion-button>
-              </div>
+          <div class="section-block">
+            <p class="section-label">Wi-Fi network</p>
+            <p class="step-help inner-help">
+              Choose the network the device should join.
+            </p>
 
-              <div class="wifi-network-list" *ngIf="wifiNetworks.length > 0; else noNetworks">
-                <button
-                  class="wifi-network-option"
-                  [class.is-selected]="isSelectedWifiNetwork(network)"
-                  type="button"
-                  *ngFor="let network of wifiNetworks"
-                  (click)="selectWifiNetwork(network)"
-                >
-                  <span>
-                    <strong>{{ network.ssid }}</strong>
-                    <small>{{ network.secure ? 'Secured' : 'Open' }}</small>
-                  </span>
-                  <span class="network-rssi" *ngIf="network.rssi !== undefined">{{ network.rssi }} dBm</span>
-                </button>
-              </div>
-
-              <ng-template #noNetworks>
-                <div class="wifi-empty-state">
-                  Scanning for available networks...
+            <div [formGroup]="wifiForm" class="device-form">
+              <div class="wifi-network-picker">
+                <div class="picker-header">
+                  <p class="field-label">Available networks</p>
+                  <ion-button
+                    class="refresh-button"
+                    fill="clear"
+                    type="button"
+                    [disabled]="isBusy"
+                    (click)="loadWifiNetworks()"
+                  >
+                    <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                    REFRESH
+                  </ion-button>
                 </div>
-              </ng-template>
+
+                <div class="wifi-network-list" *ngIf="wifiNetworks.length > 0; else noNetworks">
+                  <button
+                    class="wifi-network-option"
+                    [class.is-selected]="isSelectedWifiNetwork(network)"
+                    type="button"
+                    *ngFor="let network of wifiNetworks"
+                    (click)="selectWifiNetwork(network)"
+                  >
+                    <span>
+                      <strong>{{ network.ssid }}</strong>
+                      <small>{{ network.secure ? 'Secured' : 'Open' }}</small>
+                    </span>
+                    <span class="network-rssi" *ngIf="network.rssi !== undefined">{{ network.rssi }} dBm</span>
+                  </button>
+                </div>
+
+                <ng-template #noNetworks>
+                  <div class="wifi-empty-state">
+                    Scanning for nearby Wi-Fi...
+                  </div>
+                </ng-template>
+              </div>
+
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Wi-Fi SSID</ion-label>
+                <ion-input
+                  formControlName="ssid"
+                  placeholder="Wi-Fi network name"
+                  autocomplete="off"
+                ></ion-input>
+              </ion-item>
+              <ion-text color="danger" *ngIf="showSsidError">Select a Wi-Fi network.</ion-text>
+
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Wi-Fi Password</ion-label>
+                <ion-input
+                  formControlName="password"
+                  type="password"
+                  placeholder="Enter the Wi-Fi password"
+                  autocomplete="off"
+                ></ion-input>
+              </ion-item>
             </div>
-
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Wi-Fi SSID</ion-label>
-              <ion-input
-                formControlName="ssid"
-                placeholder="Wi-Fi network name"
-                autocomplete="off"
-              ></ion-input>
-            </ion-item>
-            <ion-text color="danger" *ngIf="showSsidError">Select a Wi-Fi network.</ion-text>
-
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Wi-Fi Password</ion-label>
-              <ion-input
-                formControlName="password"
-                type="password"
-                placeholder="Enter the Wi-Fi password"
-                autocomplete="off"
-              ></ion-input>
-            </ion-item>
-            <ion-text color="danger" *ngIf="connectionStatusMessage">
-              {{ connectionStatusMessage }}
-            </ion-text>
-
           </div>
 
-          <p class="section-label section-spacer">Device details</p>
+          <div class="section-block">
+            <p class="section-label">Device details</p>
+            <p class="step-help inner-help">
+              Give the device a name so it is easy to find later.
+            </p>
 
-          <ion-list lines="none" class="provisioning-list">
-            <ion-item lines="none" class="input-item">
-              <ion-label>
-                <p>Device code</p>
-                <strong>{{ scannedDeviceId }}</strong>
-              </ion-label>
-            </ion-item>
-            <ion-item lines="none" class="input-item">
-              <ion-label>
-                <p>Device address</p>
-                <strong>{{ hostname }}</strong>
-              </ion-label>
-            </ion-item>
-          </ion-list>
+            <ion-list lines="none" class="provisioning-list">
+              <ion-item lines="none" class="input-item">
+                <ion-label>
+                  <p>Device code</p>
+                  <strong>{{ scannedDeviceId }}</strong>
+                </ion-label>
+              </ion-item>
+              <ion-item lines="none" class="input-item">
+                <ion-label>
+                  <p>Device address</p>
+                  <strong>{{ hostname }}</strong>
+                </ion-label>
+              </ion-item>
+            </ion-list>
 
-          <div [formGroup]="saveForm" class="device-form">
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Device name</ion-label>
-              <ion-input
-                formControlName="name"
-                placeholder="Living Room Camera"
-                autocomplete="off"
-              ></ion-input>
-            </ion-item>
-            <ion-text color="danger" *ngIf="showNameError">Give this device a name so it is easy to find later.</ion-text>
+            <div [formGroup]="saveForm" class="device-form">
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Device name</ion-label>
+                <ion-input
+                  formControlName="name"
+                  placeholder="Living Room Camera"
+                  autocomplete="off"
+                ></ion-input>
+              </ion-item>
+              <ion-text color="danger" *ngIf="showNameError">Give this device a name so it is easy to find later.</ion-text>
 
-            <ion-item lines="none" class="input-item">
-              <ion-label position="stacked">Location</ion-label>
-              <ion-input
-                formControlName="location"
-                placeholder="Living Room"
-                autocomplete="off"
-              ></ion-input>
-            </ion-item>
-            <ion-text color="danger" *ngIf="showLocationError">Tell us where this device is installed.</ion-text>
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Location</ion-label>
+                <ion-input
+                  formControlName="location"
+                  placeholder="Living Room"
+                  autocomplete="off"
+                ></ion-input>
+              </ion-item>
+              <ion-text color="danger" *ngIf="showLocationError">Tell us where this device is installed.</ion-text>
 
-            <ion-button
-              class="submit-button"
-              expand="block"
-              type="button"
-              [disabled]="isBusy"
-              (click)="connectAndSaveDevice()"
-            >
-              <ion-icon slot="start" name="save-outline"></ion-icon>
-              CONNECT & SAVE
-            </ion-button>
+              <ion-button
+                class="submit-button"
+                expand="block"
+                type="button"
+                [disabled]="isBusy"
+                (click)="connectAndSaveDevice()"
+              >
+                <ion-icon slot="start" name="save-outline"></ion-icon>
+                CONNECT & SAVE
+              </ion-button>
+
+              <div class="result-banner" *ngIf="deviceStatusMessage" [class.is-danger]="deviceStatusTone === 'danger'">
+                <strong>{{ deviceStatusTone === 'danger' ? 'Need a quick fix' : 'All set' }}</strong>
+                <span>{{ deviceStatusMessage }}</span>
+              </div>
+            </div>
           </div>
         </ion-card-content>
       </ion-card>
@@ -239,4 +252,12 @@
     position="top"
     (didDismiss)="closeToast()"
   ></ion-toast>
+
+  <ion-loading
+    [isOpen]="isBusy"
+    [message]="loadingMessage || 'Loading...'"
+    spinner="crescent"
+    translucent="true"
+    backdropDismiss="false"
+  ></ion-loading>
 </ion-content>

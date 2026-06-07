@@ -23,6 +23,7 @@ import {
   IonLabel,
   IonList,
   IonProgressBar,
+  IonLoading,
   IonText,
   IonTitle,
   IonToast,
@@ -69,6 +70,7 @@ interface BarcodeDetectorConstructor {
     IonLabel,
     IonList,
     IonProgressBar,
+    IonLoading,
     IonText,
     IonTitle,
     IonToast,
@@ -111,7 +113,9 @@ export class DeviceScanPage implements OnDestroy {
   scannedDeviceId = '';
   deviceInfo: ProvisionedDeviceInfo | null = null;
   wifiNetworks: ProvisioningWifiNetwork[] = [];
-  connectionStatusMessage = '';
+  deviceStatusMessage = '';
+  deviceStatusTone: 'success' | 'danger' = 'success';
+  loadingMessage = '';
   isBusy = false;
   isScanning = false;
   scannerSupported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
@@ -163,7 +167,7 @@ export class DeviceScanPage implements OnDestroy {
       await video.play();
       this.isScanning = true;
       this.scanNextFrame();
-    }, 'Unable to start the camera scanner.');
+    }, 'Opening the camera scanner...');
   }
 
   stopScanner(): void {
@@ -212,9 +216,9 @@ export class DeviceScanPage implements OnDestroy {
       const info = await this.deviceProvisioning.getSetupDeviceInfo();
       this.deviceProvisioning.assertMatchingDeviceId(this.scannedDeviceId, info.deviceId);
       this.deviceInfo = info;
-      this.step = 'wifi';
       await this.loadWifiNetworksAfterVerify();
-    }, 'We could not reach the device info endpoint. Reconnect to the device hotspot, then try again.');
+      this.step = 'wifi';
+    }, 'Verifying the device hotspot...');
   }
 
   async loadWifiNetworks(): Promise<void> {
@@ -227,13 +231,12 @@ export class DeviceScanPage implements OnDestroy {
       }
 
       this.presentToast('Nearby Wi-Fi networks loaded. Pick the one you want the device to join.', 'success');
-    }, 'The ESP32 is reachable, but Wi-Fi scanning is not ready yet. Try refresh in a moment.');
+    }, 'Loading nearby Wi-Fi networks...');
   }
 
   selectWifiNetwork(network: ProvisioningWifiNetwork): void {
     this.wifiForm.controls.ssid.setValue(network.ssid);
     this.wifiForm.controls.ssid.markAsDirty();
-    this.connectionStatusMessage = '';
   }
 
   isSelectedWifiNetwork(network: ProvisioningWifiNetwork): boolean {
@@ -248,15 +251,20 @@ export class DeviceScanPage implements OnDestroy {
       return;
     }
 
-    await this.runBusy(async () => {
-      this.connectionStatusMessage = 'Checking Wi-Fi credentials with the ESP32...';
+    this.deviceStatusMessage = '';
+    this.isBusy = true;
+    this.loadingMessage = 'Saving the device and connecting to Wi-Fi...';
+
+    try {
       const wifiResult = await this.deviceProvisioning.sendWifiCredentials(this.wifiForm.getRawValue());
 
       if (!wifiResult.connected) {
         this.wifiForm.controls.password.setValue('');
         this.wifiForm.controls.password.markAsPristine();
-        this.connectionStatusMessage = wifiResult.message
+        this.deviceStatusTone = 'danger';
+        this.deviceStatusMessage = wifiResult.message
           || 'That Wi-Fi password did not work. The device stayed in setup mode so you can try again.';
+        this.presentToast(this.deviceStatusMessage, 'danger');
         return;
       }
 
@@ -274,12 +282,27 @@ export class DeviceScanPage implements OnDestroy {
         autoCheckIntervalSeconds: DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
       });
 
-      await this.router.navigate(['/devices'], {
-        state: {
-          message: 'Device connected and saved successfully.',
-        },
-      });
-    }, 'We lost the device hotspot before finishing. Reconnect to the device hotspot and try again.');
+      this.deviceStatusTone = 'success';
+      this.deviceStatusMessage = 'The device is connected and saved. You can find it in your device list.';
+      this.presentToast('Device connected and saved successfully.', 'success');
+    } catch (error) {
+      const message = this.getErrorMessage(error, 'We could not finish saving the device right now.');
+      this.deviceStatusTone = 'danger';
+      this.deviceStatusMessage = message;
+      this.presentToast(message, 'danger');
+      return;
+    } finally {
+      this.isBusy = false;
+      this.loadingMessage = '';
+    }
+
+    await this.flushUiFrame();
+
+    await this.router.navigate(['/devices'], {
+      state: {
+        message: 'Device connected and saved successfully.',
+      },
+    });
   }
 
   closeToast(): void {
@@ -360,6 +383,7 @@ export class DeviceScanPage implements OnDestroy {
     }
 
     this.isBusy = true;
+    this.loadingMessage = fallbackMessage;
 
     try {
       await action();
@@ -367,6 +391,7 @@ export class DeviceScanPage implements OnDestroy {
       this.presentToast(this.getErrorMessage(error, fallbackMessage), 'danger');
     } finally {
       this.isBusy = false;
+      this.loadingMessage = '';
     }
   }
 
@@ -377,7 +402,6 @@ export class DeviceScanPage implements OnDestroy {
   private async loadWifiNetworksAfterVerify(): Promise<void> {
     try {
       this.wifiNetworks = await this.getWifiNetworks();
-      this.connectionStatusMessage = '';
 
       if (this.wifiNetworks.length === 0) {
         this.presentToast('The device is verified, but it has not returned nearby Wi-Fi yet.', 'danger');
@@ -399,6 +423,12 @@ export class DeviceScanPage implements OnDestroy {
 
   private getErrorMessage(error: unknown, fallbackMessage: string): string {
     return error instanceof Error ? error.message : fallbackMessage;
+  }
+
+  private async flushUiFrame(): Promise<void> {
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
   }
 
   private scanNextFrame(): void {
