@@ -62,17 +62,6 @@
             </div>
           </div>
 
-          <div class="status-row">
-            <div class="status-copy">
-              <p class="section-label">Server Status</p>
-              <p class="status-help">Shows if the app is connected to the remote service.</p>
-            </div>
-
-            <div class="status-pill" [ngClass]="getServerStatusClass(connectionState$ | async)">
-              {{ getServerStatusLabel(connectionState$ | async) }}
-            </div>
-          </div>
-
           <ion-button
             class="status-check-button"
             fill="outline"
@@ -114,7 +103,7 @@
             <ion-item button detail="false" class="component-item" (click)="openComponent(component)">
               <ion-label>
                 <strong>{{ component.name }}</strong>
-                <p>Code: {{ component.code }}</p>
+                <p>{{ component.code }}</p>
               </ion-label>
               <div slot="end" class="component-arrow">
                 <ion-icon name="chevron-forward-outline"></ion-icon>

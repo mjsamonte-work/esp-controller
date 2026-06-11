@@ -366,9 +366,9 @@ export class EasyRemotePage implements OnInit, OnDestroy {
   getDeviceStatusLabel(state: DeviceHealthState | null): string {
     switch (state) {
       case 'online':
-        return 'Online';
+        return 'Online - Connected';
       case 'offline':
-        return 'Offline';
+        return 'Offline - Disconnected';
       case 'checking':
         return 'Checking...';
       case 'unknown':

@@ -56,7 +56,7 @@
             <ion-item button detail="false" class="device-item" (click)="openDevice(device)">
               <ion-label>
                 <strong>{{ device.name }}</strong>
-                <p>Code: {{ device.code }} | Location: {{ device.location }}</p>
+                <p>{{ device.code }} | Location: {{ device.location }}</p>
                 <p *ngIf="device.hostname || device.model || device.firmwareVersion" class="device-provisioning-meta">
                 </p>
               </ion-label>
