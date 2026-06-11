@@ -20,6 +20,18 @@
           <p class="section-label">{{ isEditMode ? 'Edit Device' : 'Add Device' }}</p>
           <h2>{{ pageHeading }}</h2>
 
+          <ion-button
+            *ngIf="!isEditMode"
+            class="submit-button"
+            expand="block"
+            fill="outline"
+            type="button"
+            (click)="scanDevice()"
+          >
+            <ion-icon slot="start" name="qr-code-outline"></ion-icon>
+            SCAN DEVICE QR
+          </ion-button>
+
           <form [formGroup]="deviceForm" (ngSubmit)="saveDevice()" class="device-form">
             <ion-item lines="none" class="input-item">
               <ion-label position="stacked">Device Code</ion-label>

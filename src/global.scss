@@ -595,17 +595,25 @@ ion-title {
   height: 18px;
 }
 
-.on-button {
+.switch-button {
   --background: linear-gradient(180deg, #1761bf 0%, var(--easy-blue-dark) 100%);
   --background-activated: var(--easy-blue-dark);
   --background-hover: #1557ab;
+  --box-shadow: 0 18px 28px rgba(13, 87, 184, 0.22);
 }
 
-.off-button {
+.switch-button[color='danger'] {
   --background: linear-gradient(180deg, #f22831 0%, #d91620 100%);
   --background-activated: #c8141e;
   --background-hover: #db1b24;
   --box-shadow: 0 18px 28px rgba(227, 29, 40, 0.22);
+}
+
+.switch-button[color='warning'] {
+  --background: linear-gradient(180deg, #f0a400 0%, #de8a00 100%);
+  --background-activated: #c97d00;
+  --background-hover: #e19500;
+  --box-shadow: 0 18px 28px rgba(240, 164, 0, 0.24);
 }
 
 .home-shell {

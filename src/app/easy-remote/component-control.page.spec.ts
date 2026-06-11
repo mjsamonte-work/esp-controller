@@ -81,15 +81,14 @@ describe('ComponentControlPage', () => {
 
   it('renders the selected component', () => {
     expect(fixture.nativeElement.textContent).toContain('Relay 1');
-    expect(fixture.nativeElement.textContent).toContain('TURN ON');
-    expect(fixture.nativeElement.textContent).toContain('TURN OFF');
+    expect(fixture.nativeElement.textContent).toContain('SWITCH');
   });
 
-  it('publishes a component ON command', async () => {
+  it('publishes a component switch command', async () => {
     deviceHealth$.next('online');
     fixture.detectChanges();
 
-    component.requestStateChange('ON');
+    component.requestSwitch();
     fixture.detectChanges();
     await component.confirmStateChange();
 
@@ -101,7 +100,7 @@ describe('ComponentControlPage', () => {
     fixture.detectChanges();
     mqttService.checkDeviceStatus.calls.reset();
 
-    component.requestStateChange('ON');
+    component.requestSwitch();
     fixture.detectChanges();
     void component.confirmStateChange();
 
@@ -117,22 +116,23 @@ describe('ComponentControlPage', () => {
 
   it('shows a confirmation alert before turning on or off', () => {
     deviceHealth$.next('online');
-    component.requestStateChange('ON');
+    component.requestSwitch();
     fixture.detectChanges();
 
     expect(component.confirmAlertOpen).toBeTrue();
-    expect(component.confirmHeader).toBe('Confirm Turn On');
+    expect(component.confirmHeader).toBe('Confirm Switch On');
     expect(component.confirmMessage).toContain('turn on Relay 1');
     expect(mqttService.setActiveComponent).toHaveBeenCalledWith('esp1', 'relay-1');
   });
 
-  it('uses a confirmation alert before turning off', () => {
+  it('uses a confirmation alert before switching off when the component is on', () => {
     deviceHealth$.next('online');
-    component.requestStateChange('OFF');
+    equipmentState$.next('ON');
+    component.requestSwitch();
     fixture.detectChanges();
 
     expect(component.confirmAlertOpen).toBeTrue();
-    expect(component.confirmHeader).toBe('Confirm Turn Off');
+    expect(component.confirmHeader).toBe('Confirm Switch Off');
     expect(component.confirmMessage).toContain('turn off Relay 1');
   });
 

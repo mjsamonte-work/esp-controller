@@ -40,6 +40,32 @@ describe('DeviceStoreService', () => {
     });
   });
 
+  it('adds a provisioned device with ESP32 metadata', async () => {
+    await service.ready();
+    await service.addDevice({
+      name: 'Living Room Camera',
+      code: 'CAM-8F2A1B',
+      location: 'Living Room',
+      hostname: 'cam-8f2a1b.local',
+      model: 'ESP32-CAM',
+      firmwareVersion: '1.0.0',
+      autoCheckIntervalSeconds: 30,
+    });
+
+    expect(service.devices).toEqual([
+      {
+        name: 'Living Room Camera',
+        code: 'CAM-8F2A1B',
+        location: 'Living Room',
+        hostname: 'cam-8f2a1b.local',
+        model: 'ESP32-CAM',
+        firmwareVersion: '1.0.0',
+        autoCheckIntervalSeconds: 30,
+        components: [],
+      },
+    ]);
+  });
+
   it('rejects duplicate device codes', async () => {
     await service.ready();
     await service.addDevice({

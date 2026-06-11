@@ -5,7 +5,9 @@ import { BehaviorSubject } from 'rxjs';
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
+  DEFAULT_EASY_SWITCH_COMPONENTS,
   Device,
+  DeviceType,
   type DeviceComponent,
 } from '../models/device.model';
 
@@ -20,29 +22,9 @@ const DEFAULT_DEVICES: Device[] = [
     name: 'SMART EASY PH DEVICE',
     code: 'smart-easy-ph-device',
     location: 'Living Room',
+    type: DeviceType.EasySwitch,
     autoCheckIntervalSeconds: DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
-    components: [
-      {
-        name: 'Equipment 1',
-        code: 'equipment-1',
-      },
-      {
-        name: 'Equipment 2',
-        code: 'equipment-2',
-      },
-      {
-        name: 'Equipment 3',
-        code: 'equipment-3',
-      },
-      {
-        name: 'Equipment 4',
-        code: 'equipment-4',
-      },
-      {
-        name: 'Equipment 5',
-        code: 'equipment-5',
-      },
-    ],
+    components: DEFAULT_EASY_SWITCH_COMPONENTS,
   },
 ];
 
@@ -75,8 +57,12 @@ export class DeviceStoreService {
       name: device.name.trim(),
       code: device.code.trim(),
       location: device.location.trim(),
+      type: this.normalizeDeviceType(device.type),
+      hostname: this.normalizeOptionalText(device.hostname),
+      model: this.normalizeOptionalText(device.model),
+      firmwareVersion: this.normalizeOptionalText(device.firmwareVersion),
       autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
-      components: this.normalizeComponents(device.components),
+      components: this.normalizeComponentsForType(device.type, device.components),
     };
 
     if (!normalizedDevice.name || !normalizedDevice.code || !normalizedDevice.location) {
@@ -94,7 +80,7 @@ export class DeviceStoreService {
 
   async updateDevice(
     code: string,
-    updates: Pick<Device, 'name' | 'location' | 'autoCheckIntervalSeconds'>,
+    updates: Pick<Device, 'name' | 'location' | 'autoCheckIntervalSeconds'> & Partial<Pick<Device, 'type'>>,
   ): Promise<void> {
     await this.ready();
 
@@ -113,12 +99,16 @@ export class DeviceStoreService {
       throw new Error('Device not found.');
     }
 
+    const normalizedType = this.normalizeDeviceType(updates.type ?? existingDevice.type);
+
     const updatedDevices = this.devicesSubject.value.map((device) =>
       device.code.trim().toLowerCase() === normalizedCode.toLowerCase()
         ? {
             ...device,
             name: normalizedName,
             location: normalizedLocation,
+            type: normalizedType,
+            components: this.normalizeComponentsForType(normalizedType, device.components),
             autoCheckIntervalSeconds: normalizedInterval,
           }
         : device,
@@ -295,8 +285,12 @@ export class DeviceStoreService {
             name: device.name.trim() || device.code.trim(),
             code: device.code.trim(),
             location: device.location.trim(),
+            type: this.normalizeDeviceType(device.type),
+            hostname: this.normalizeOptionalText(device.hostname),
+            model: this.normalizeOptionalText(device.model),
+            firmwareVersion: this.normalizeOptionalText(device.firmwareVersion),
             autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
-            components: this.normalizeComponents(device.components),
+            components: this.normalizeComponentsForType(device.type, device.components),
           }))
           .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
@@ -336,6 +330,11 @@ export class DeviceStoreService {
       typeof candidate.code === 'string' &&
       typeof candidate.location === 'string' &&
       (typeof candidate.name === 'string' || typeof candidate.name === 'undefined') &&
+      (typeof candidate.hostname === 'string' || typeof candidate.hostname === 'undefined') &&
+      (Object.values(DeviceType).includes(candidate.type as DeviceType)
+        || typeof candidate.type === 'undefined') &&
+      (typeof candidate.model === 'string' || typeof candidate.model === 'undefined') &&
+      (typeof candidate.firmwareVersion === 'string' || typeof candidate.firmwareVersion === 'undefined') &&
       (typeof candidate.autoCheckIntervalSeconds === 'number'
         || typeof candidate.autoCheckIntervalSeconds === 'undefined') &&
       (Array.isArray(candidate.components) || typeof candidate.components === 'undefined')
@@ -346,6 +345,33 @@ export class DeviceStoreService {
     return AUTO_CHECK_INTERVAL_OPTIONS.includes(value as Device['autoCheckIntervalSeconds'])
       ? (value as Device['autoCheckIntervalSeconds'])
       : DEFAULT_AUTO_CHECK_INTERVAL_SECONDS;
+  }
+
+  private normalizeDeviceType(value: DeviceType | undefined): DeviceType {
+    return Object.values(DeviceType).includes(value as DeviceType)
+      ? (value as DeviceType)
+      : DeviceType.EasySwitch;
+  }
+
+  private normalizeComponentsForType(
+    type: DeviceType | undefined,
+    components: DeviceComponent[] | undefined,
+  ): DeviceComponent[] {
+    const normalizedType = this.normalizeDeviceType(type);
+    const normalizedComponents = this.normalizeComponents(components);
+
+    if (normalizedComponents.length > 0) {
+      return normalizedComponents;
+    }
+
+    return normalizedType === DeviceType.EasySwitch
+      ? this.normalizeComponents(DEFAULT_EASY_SWITCH_COMPONENTS)
+      : [];
+  }
+
+  private normalizeOptionalText(value: string | undefined): string | undefined {
+    const normalizedValue = value?.trim();
+    return normalizedValue ? normalizedValue : undefined;
   }
 
   private normalizeComponents(components: DeviceComponent[] | undefined): DeviceComponent[] {
@@ -413,8 +439,12 @@ export class DeviceStoreService {
       name,
       code,
       location,
+      type: this.normalizeDeviceType(candidate.type),
+      hostname: this.normalizeOptionalText(candidate.hostname),
+      model: this.normalizeOptionalText(candidate.model),
+      firmwareVersion: this.normalizeOptionalText(candidate.firmwareVersion),
       autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(candidate.autoCheckIntervalSeconds),
-      components: this.normalizeComponents(candidate.components),
+      components: this.normalizeComponentsForType(candidate.type, candidate.components),
     };
   }
 }

@@ -13,6 +13,10 @@ export const environment = {
     username: 'hf5C405x',
     password: '?rkG479!C}rW~98Z',
   },
+  provisioning: {
+    setupBaseUrl: 'http://192.168.4.1',
+    homeDeviceInfoUrlTemplate: 'http://192.168.4.1/device-info',
+  },
 };
 
 /*
