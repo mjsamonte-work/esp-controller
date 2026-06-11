@@ -373,7 +373,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
         return 'Checking...';
       case 'unknown':
       default:
-        return 'Unknown';
+        return 'Offline - Disconnected';
     }
   }
 

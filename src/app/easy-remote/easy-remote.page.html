@@ -85,9 +85,9 @@
             <ion-label>
               <h2 class="header-title">Components</h2>
             </ion-label>
-            <ion-badge color="primary" class="device-count-badge">
-              {{ components.length }} component(s)
-            </ion-badge>
+            <span class="component-count">
+              {{ components.length }}
+            </span>
           </ion-item>
 
           <ion-button *ngIf="showAddComponentAction" class="add-component-button" expand="block" (click)="openComponentForm()">
