@@ -1,7 +1,7 @@
 import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { addOutline, chevronBackOutline, chevronForwardOutline, createOutline, eyeOutline, trashOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, chevronForwardOutline, createOutline, eyeOutline, informationCircleOutline, trashOutline } from 'ionicons/icons';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
@@ -17,6 +17,7 @@ import {
   IonItemSliding,
   IonLabel,
   IonList,
+  IonPopover,
   IonSelect,
   IonSelectOption,
   IonSpinner,
@@ -55,6 +56,7 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
     IonItemSliding,
     IonLabel,
     IonList,
+    IonPopover,
     IonSelect,
     IonSelectOption,
     IonSpinner,
@@ -126,6 +128,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
       'chevron-forward-outline': chevronForwardOutline,
       'create-outline': createOutline,
       'eye-outline': eyeOutline,
+      'information-circle-outline': informationCircleOutline,
       'trash-outline': trashOutline,
     });
   }

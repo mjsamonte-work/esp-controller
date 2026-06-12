@@ -33,7 +33,7 @@
 
           <ion-button *ngIf="showScanDeviceAction" class="add-device-button" expand="block" (click)="scanDevice()">
             <ion-icon slot="start" name="qr-code-outline"></ion-icon>
-            SCAN DEVICE QR
+            ADD DEVICE
           </ion-button>
 
           <ion-button
@@ -96,6 +96,11 @@
             </p>
           </div>
         </ng-template>
+
+        <div class="device-list-note">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <span>Swipe left on a device to view or edit. Tap to open and control.</span>
+        </div>
       </section>
     </div>
   </div>

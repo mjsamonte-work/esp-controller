@@ -57,21 +57,6 @@
           </div>
         </div>
 
-        <div class="status-row component-status-row">
-          <div class="status-copy">
-            <p class="section-label">Last Equipment State</p>
-            <p class="status-help">
-              Shows the latest ON or OFF feedback received from the device on /event.
-              This is the last known state of the equipment.
-            </p>
-          </div>
-          <div
-            class="status-pill"
-            [ngClass]="getLastEquipmentStateClass(componentHealth$ | async, equipmentState$ | async)"
-          >
-            {{ getLastEquipmentStateLabel(componentHealth$ | async, equipmentState$ | async) }}
-          </div>
-        </div>
       </section>
 
       <section class="action-panel">

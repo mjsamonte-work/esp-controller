@@ -253,12 +253,12 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     return 'SWITCHING...';
   }
 
-  get switchButtonColor(): 'success' | 'danger' | 'warning' {
+  get switchButtonColor(): 'primary' | 'danger' | 'warning' {
     if (this.isSubmitting) {
       return 'warning';
     }
 
-    return this.getNextState() === 'ON' ? 'success' : 'danger';
+    return this.getNextState() === 'ON' ? 'primary' : 'danger';
   }
 
   async refreshDeviceStatus(): Promise<void> {

@@ -9,6 +9,7 @@ import {
   chevronForwardOutline,
   createOutline,
   eyeOutline,
+  informationCircleOutline,
   qrCodeOutline,
   trashOutline,
 } from 'ionicons/icons';
@@ -94,6 +95,7 @@ export class DevicesPage implements OnInit {
       'cloud-upload-outline': cloudUploadOutline,
       'chevron-back-outline': chevronBackOutline,
       'chevron-forward-outline': chevronForwardOutline,
+      'information-circle-outline': informationCircleOutline,
       'create-outline': createOutline,
       'eye-outline': eyeOutline,
       'qr-code-outline': qrCodeOutline,
