@@ -21,9 +21,6 @@
             <ion-label>
               <h2 class="header-title">Select a device to control</h2>
             </ion-label>
-            <ion-badge color="primary" class="device-count-badge">
-              {{ (devices$ | async)?.length ?? 0 }} device(s)
-            </ion-badge>
           </ion-item>
 
           <ion-button *ngIf="showAddDeviceAction" class="add-device-button" expand="block" (click)="createDevice()">
@@ -33,7 +30,7 @@
 
           <ion-button *ngIf="showScanDeviceAction" class="add-device-button" expand="block" (click)="scanDevice()">
             <ion-icon slot="start" name="qr-code-outline"></ion-icon>
-            SCAN DEVICE QR
+            ADD DEVICE
           </ion-button>
 
           <ion-button
@@ -48,15 +45,26 @@
             IMPORT DEVICES
           </ion-button>
 
-          <p class="section-label list-section-label">List of devices</p>
+          <div class="list-title-row">
+            <p class="section-label list-section-label">List of devices</p>
+            <span class="component-count device-count-badge">
+              {{ (devices$ | async)?.length ?? 0 }}
+            </span>
+          </div>
         </div>
 
         <ion-list lines="none" *ngIf="(devices$ | async)?.length; else emptyState">
           <ion-item-sliding *ngFor="let device of devices$ | async" class="device-slide">
             <ion-item button detail="false" class="device-item" (click)="openDevice(device)">
-              <ion-label>
+              <div slot="start" class="component-avatar device-avatar">
+                <ion-icon name="cube-outline" aria-hidden="true"></ion-icon>
+              </div>
+              <ion-label class="device-copy">
                 <strong>{{ device.name }}</strong>
-                <p>Code: {{ device.code }} | Location: {{ device.location }}</p>
+                <div class="device-detail-grid">
+                  <p>{{ device.code }}</p>
+                  <p>{{ device.location }}</p>
+                </div>
                 <p *ngIf="device.hostname || device.model || device.firmwareVersion" class="device-provisioning-meta">
                 </p>
               </ion-label>
@@ -96,6 +104,11 @@
             </p>
           </div>
         </ng-template>
+
+        <div class="device-list-note">
+          <ion-icon name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <span>Swipe left on a device to view or edit. Tap to open and control.</span>
+        </div>
       </section>
     </div>
   </div>

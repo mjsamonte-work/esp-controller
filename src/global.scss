@@ -129,7 +129,7 @@ ion-title {
 .component-form-stage,
 .remote-stage {
   flex: 1;
-  padding: 24px 20px;
+  padding: 28px 20px 32px;
 }
 
 .devices-panel,
@@ -143,7 +143,7 @@ ion-title {
 
 .devices-panel,
 .remote-stage {
-  gap: 20px;
+  gap: 22px;
 }
 
 .header-summary,
@@ -172,14 +172,28 @@ ion-title {
 }
 
 .device-count-badge {
-  --padding-start: 14px;
-  --padding-end: 14px;
-  --padding-top: 10px;
-  --padding-bottom: 10px;
-  --background: rgba(13, 87, 184, 0.12);
-  --color: var(--easy-blue);
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+}
+
+.device-avatar {
+  color: var(--easy-blue);
+}
+
+.component-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(13, 87, 184, 0.1);
+  color: var(--easy-blue);
+  font-size: 0.9rem;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  line-height: 1;
 }
 
 .section-label {
@@ -202,9 +216,137 @@ ion-title {
 .device-meta {
   margin: 0;
   color: var(--easy-text);
-  font-size: 1rem;
+  font-size: 1.08rem;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.status-card,
+.device-details-card,
+.component-control-card,
+.action-panel {
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(112, 134, 166, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 10px 24px rgba(48, 64, 96, 0.08);
+}
+
+.device-details-card {
+  padding: 22px 20px;
+}
+
+.status-details {
+  display: grid;
+  gap: 20px;
+}
+
+.device-list-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: rgba(13, 87, 184, 0.06);
+  color: var(--easy-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+.device-list-note ion-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  color: var(--easy-blue);
+  opacity: 0.7;
+}
+
+.interval-item {
+  --background: #eef6ff;
+  --border-radius: 20px;
+  --padding-start: 18px;
+  --inner-padding-end: 18px;
+  --min-height: auto;
+  border: 1px solid rgba(45, 132, 226, 0.24);
+  border-radius: 20px;
+  box-shadow: 0 10px 22px rgba(13, 87, 184, 0.08);
+}
+
+.interval-item::part(native) {
+  align-items: stretch;
+  flex-direction: column;
+  padding-block: 18px;
+}
+
+.interval-item ion-label {
+  width: 100%;
+  margin: 0;
+}
+
+.interval-item-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.interval-title-group {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+
+.auto-check-title {
+  margin: 0;
+  color: var(--easy-text);
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.interval-item-head ion-select {
+  flex: 0 0 auto;
+  max-width: 160px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid rgba(112, 134, 166, 0.25);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--easy-blue);
+  font-weight: 800;
+}
+
+.auto-check-info-icon {
+  font-size: 1.2rem;
+  color: var(--easy-muted);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.auto-check-info-icon:hover {
+  opacity: 1;
+  color: var(--easy-blue);
+}
+
+.auto-check-popover-content {
+  padding: 14px 16px;
+  max-width: 280px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--easy-text);
+}
+
+.auto-check-popover-content p {
+  margin: 0;
+}
+
+.device-status-section {
+  display: grid;
+  gap: 14px;
 }
 
 .form-card {
@@ -283,33 +425,36 @@ ion-title {
 }
 
 .status-pill {
-  border-radius: 999px;
-  padding: 10px 18px;
+  border-radius: 16px;
+  padding: 14px 18px;
   font-size: 1rem;
   font-weight: 800;
+  line-height: 1.2;
   white-space: nowrap;
+  text-align: center;
 }
 
 .status-connected {
-  background: rgba(24, 157, 74, 0.14);
-  color: #148544;
+  background: #ecfff2;
+  border: 1px solid rgba(24, 157, 74, 0.22);
+  color: #278657;
 }
 
 .status-disconnected {
   background: var(--easy-red-soft);
+  border: 1px solid rgba(227, 29, 40, 0.18);
   color: var(--easy-red);
 }
 
 .status-pending {
   background: #fff4d7;
+  border: 1px solid rgba(151, 104, 0, 0.16);
   color: #976800;
 }
 
 .status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  gap: 14px;
 }
 
 .status-copy,
@@ -318,11 +463,36 @@ ion-title {
   gap: 4px;
 }
 
+.status-title-row {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 6px;
+}
+
+.status-title-row .section-label {
+  margin: 0;
+}
+
+.status-info-icon {
+  color: var(--easy-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.65;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.status-info-icon:hover {
+  color: var(--easy-blue);
+  opacity: 1;
+}
+
 .status-check-button {
-  --border-color: rgba(13, 87, 184, 0.22);
+  --border-color: var(--easy-blue-dark);
   --color: var(--easy-blue);
-  --border-radius: 18px;
-  min-height: 52px;
+  --border-radius: 16px;
+  --border-width: 2px;
+  min-height: 56px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -367,7 +537,7 @@ ion-title {
 }
 
 .component-hero {
-  padding: 8px 4px 2px;
+  padding: 6px 2px 0;
 }
 
 .component-hero h1 {
@@ -394,23 +564,26 @@ ion-title {
   gap: 10px;
 }
 
-.component-control-card,
-.action-panel {
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 28px;
-  box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
+.component-control-card {
+  padding: 20px;
+  display: grid;
+  gap: 20px;
 }
 
-.component-control-card {
-  padding: 22px 18px;
-  display: grid;
-  gap: 18px;
+.equipment-details-card {
+  padding: 22px 20px;
 }
 
 .component-meta-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 20px;
+}
+
+.component-meta-grid .detail-item {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .component-list-card .component-item {
@@ -418,12 +591,12 @@ ion-title {
 }
 
 .component-status-row {
-  padding-top: 4px;
-  border-top: 1px solid rgba(13, 87, 184, 0.1);
+  padding-top: 0;
+  border-top: 0;
 }
 
 .action-panel {
-  padding: 20px 18px 18px;
+  padding: 20px;
   display: grid;
   gap: 16px;
 }
@@ -443,6 +616,13 @@ ion-title {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.components-header-item .header-title {
+  color: var(--easy-muted);
+  font-size: 1.08rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .manage-button {
@@ -491,12 +671,13 @@ ion-title {
 .device-item,
 .component-item {
   --background: #ffffff;
-  --padding-start: 18px;
-  --padding-end: 18px;
+  --padding-start: 16px;
+  --padding-end: 16px;
   --inner-padding-end: 0;
-  --min-height: 78px;
+  --min-height: 92px;
   border-radius: 20px;
   overflow: hidden;
+  margin: 0;
 }
 
 .device-item::part(native),
@@ -508,27 +689,79 @@ ion-title {
 .device-item strong,
 .component-item strong {
   display: block;
-  font-size: 1.05rem;
+  color: var(--easy-text);
+  font-size: 1.08rem;
   font-weight: 800;
+}
+
+.device-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.device-item-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.device-component-count {
+  min-width: max-content;
+  height: 30px;
+  font-size: 0.78rem;
+}
+
+.device-detail-grid {
+  display: grid;
+  gap: 4px;
 }
 
 .device-item p,
 .component-item p {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--easy-muted);
   font-size: 0.95rem;
 }
 
+.component-avatar {
+  width: 54px;
+  height: 54px;
+  margin-inline-end: 14px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #976800;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.device-detail-grid p {
+  margin: 0;
+  line-height: 1.25;
+}
+
+.device-detail-label {
+  flex: 0 0 auto;
+  color: var(--easy-blue);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .device-arrow,
 .component-arrow {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f2f4f8;
-  color: #7a8596;
+  background: transparent;
+  color: #c3ccd8;
   font-size: 1.55rem;
   flex-shrink: 0;
 }
@@ -583,6 +816,18 @@ ion-title {
 
 .list-section-label {
   margin-top: 4px;
+}
+
+.list-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.list-title-row .list-section-label {
+  margin: 0;
 }
 
 .action-button::part(native) {
@@ -737,5 +982,19 @@ ion-title {
   .status-pill {
     width: 100%;
     text-align: center;
+  }
+
+  .interval-item-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .interval-item-head ion-select {
+    max-width: none;
+    width: 100%;
+  }
+
+  .device-item-header {
+    flex-direction: column;
   }
 }

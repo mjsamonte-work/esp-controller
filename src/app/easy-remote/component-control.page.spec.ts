@@ -166,16 +166,6 @@ describe('ComponentControlPage', () => {
     expect(buttons[1].disabled).toBeTrue();
   });
 
-  it('shows the last equipment state feedback', () => {
-    componentHealth$.next('online');
-    equipmentState$.next('OFF');
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.textContent).toContain('Last Equipment State');
-    expect(fixture.nativeElement.textContent).toContain('OFF');
-    expect(fixture.nativeElement.textContent).toContain('latest ON or OFF feedback');
-  });
-
   it('shows checking while the component health check is pending', () => {
     componentHealth$.next('checking');
     fixture.detectChanges();

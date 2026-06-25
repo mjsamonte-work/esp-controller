@@ -25,7 +25,7 @@
         </p>
       </section>
 
-      <section class="component-control-card">
+      <section class="component-control-card equipment-details-card">
         <div class="component-meta-grid">
           <div class="detail-item">
             <p class="section-label">Device</p>
@@ -39,37 +39,32 @@
             <p class="section-label">Component Code</p>
             <p class="device-meta">{{ componentCode }}</p>
           </div>
-          <div class="detail-item">
-            <p class="section-label">Connection</p>
-            <div class="status-pill" [ngClass]="getServerStatusClass(connectionState$ | async)">
-              {{ getServerStatusLabel(connectionState$ | async) }}
-            </div>
-          </div>
         </div>
+      </section>
 
+      <section class="device-status-section equipment-status-section">
         <div class="status-row component-status-row">
           <div class="status-copy">
-            <p class="section-label">Device Status</p>
-            <p class="status-help">If the device stops sending updates on /event, it is treated as offline.</p>
+            <div class="status-title-row">
+              <p class="section-label">Device Status</p>
+              <ion-icon
+                name="information-circle-outline"
+                class="status-info-icon"
+                id="equipment-device-status-tooltip"
+                aria-label="Learn more about Device Status"
+              ></ion-icon>
+              <ion-popover trigger="equipment-device-status-tooltip" side="top" alignment="start">
+                <ng-template>
+                  <div class="auto-check-popover-content">
+                    <p>Device Status tells you if the actual device is connected and responding right now.</p>
+                  </div>
+                </ng-template>
+              </ion-popover>
+            </div>
+            <p class="status-help">Shows if this device is connected and responding right now.</p>
           </div>
           <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
             {{ getDeviceStatusLabel(deviceHealth$ | async) }}
-          </div>
-        </div>
-
-        <div class="status-row component-status-row">
-          <div class="status-copy">
-            <p class="section-label">Last Equipment State</p>
-            <p class="status-help">
-              Shows the latest ON or OFF feedback received from the device on /event.
-              This is the last known state of the equipment.
-            </p>
-          </div>
-          <div
-            class="status-pill"
-            [ngClass]="getLastEquipmentStateClass(componentHealth$ | async, equipmentState$ | async)"
-          >
-            {{ getLastEquipmentStateLabel(componentHealth$ | async, equipmentState$ | async) }}
           </div>
         </div>
       </section>

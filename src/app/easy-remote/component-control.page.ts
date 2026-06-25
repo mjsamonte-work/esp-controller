@@ -2,7 +2,7 @@ import { AsyncPipe, NgClass, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline } from 'ionicons/icons';
+import { chevronBackOutline, informationCircleOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import {
   IonAlert,
@@ -10,6 +10,7 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonPopover,
   IonSpinner,
   IonToast,
   IonTitle,
@@ -38,6 +39,7 @@ import {
     IonContent,
     IonHeader,
     IonIcon,
+    IonPopover,
     IonSpinner,
     IonToast,
     IonTitle,
@@ -97,6 +99,7 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   ) {
     addIcons({
       'chevron-back-outline': chevronBackOutline,
+      'information-circle-outline': informationCircleOutline,
     });
   }
 
@@ -253,12 +256,12 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     return 'SWITCHING...';
   }
 
-  get switchButtonColor(): 'success' | 'danger' | 'warning' {
+  get switchButtonColor(): 'primary' | 'danger' | 'warning' {
     if (this.isSubmitting) {
       return 'warning';
     }
 
-    return this.getNextState() === 'ON' ? 'success' : 'danger';
+    return this.getNextState() === 'ON' ? 'primary' : 'danger';
   }
 
   async refreshDeviceStatus(): Promise<void> {
@@ -298,14 +301,14 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   getDeviceStatusLabel(state: DeviceHealthState | null): string {
     switch (state) {
       case 'online':
-        return 'Online';
+        return 'Connected - Online';
       case 'offline':
-        return 'Offline';
+        return 'Offline - Disconnected';
       case 'checking':
         return 'Checking...';
       case 'unknown':
       default:
-        return 'Unknown';
+        return 'Offline - Disconnected';
     }
   }
 
@@ -314,8 +317,8 @@ export class ComponentControlPage implements OnInit, OnDestroy {
       case 'online':
         return 'status-connected';
       case 'checking':
-      case 'unknown':
         return 'status-pending';
+      case 'unknown':
       case 'offline':
       default:
         return 'status-disconnected';
