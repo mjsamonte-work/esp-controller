@@ -1,0 +1,150 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <div class="toolbar-shell">
+      <a class="back-button" routerLink="/devices" aria-label="Back to devices">
+        <ion-icon name="chevron-back-outline" aria-hidden="true"></ion-icon>
+      </a>
+      <ion-title>EASY ALARM</ion-title>
+      <div class="logo-slot" aria-label="Easy PH logo">
+        <img src="assets/logo.png" alt="Easy PH logo" class="header-logo" />
+      </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="remote-shell">
+    <div class="remote-stage alarm-stage">
+      <section class="page-heading">
+        <p class="section-label">Alarm Configuration</p>
+        <h1>{{ deviceName || deviceCode }}</h1>
+      </section>
+
+      <app-device-details-card
+        [deviceCode]="deviceCode"
+        [deviceLocation]="deviceLocation"
+      ></app-device-details-card>
+
+      <app-auto-check-interval
+        [value]="selectedAutoCheckIntervalSeconds"
+        [options]="autoCheckIntervalOptions"
+        tooltipId="alarm-auto-check-tooltip"
+        tooltipContent="Auto Check looks at your alarm controller from time to time so you can quickly see if it is still online and ready to save settings."
+        helpText="Set how often the app should check if this alarm device is still connected."
+        (valueChange)="updateAutoCheckInterval($event)"
+      ></app-auto-check-interval>
+
+      <app-device-status-section
+        [deviceHealth$]="deviceHealth$"
+        [deviceCheckInProgress$]="deviceCheckInProgress$"
+        (refresh)="refreshDeviceStatus()"
+        statusDescription="Shows if this alarm device is connected and responding right now."
+        tooltipContent="Device Status tells you if the alarm controller is connected and responding right now."
+        tooltipId="alarm-device-status-tooltip"
+      ></app-device-status-section>
+
+      <form [formGroup]="alarmForm" class="components-panel alarm-config-panel">
+        <div class="header-summary">
+          <ion-item lines="none" class="header-item components-header-item">
+            <ion-label>
+              <h2 class="header-title">Alarm Settings</h2>
+            </ion-label>
+            <span class="component-count">2</span>
+          </ion-item>
+
+          <p class="section-label list-section-label">Notification configuration</p>
+        </div>
+
+        <section class="alarm-config-card">
+          <div class="alarm-card-header">
+            <div class="alarm-icon">
+              <ion-icon name="mail-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="alarm-card-copy">
+              <p class="section-label">Email</p>
+              <h2>Email Address</h2>
+              <p class="status-help">{{ lastEmailStatus }}</p>
+            </div>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">Email Address</ion-label>
+            <ion-input
+              formControlName="emailAddress"
+              type="email"
+              placeholder="e.g. owner@example.com"
+              autocomplete="email"
+            ></ion-input>
+          </ion-item>
+          <ion-text color="danger" *ngIf="hasEmailError">Enter a valid email address.</ion-text>
+
+          <ion-button
+            class="submit-button"
+            expand="block"
+            type="button"
+            [disabled]="savingTarget !== null || !canSendCommand"
+            (click)="saveEmail()"
+          >
+            <ng-container *ngIf="savingTarget === 'email'; else saveEmailLabel">
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>SAVING...</span>
+            </ng-container>
+            <ng-template #saveEmailLabel>
+              <ion-icon slot="start" name="save-outline"></ion-icon>
+              SAVE EMAIL
+            </ng-template>
+          </ion-button>
+        </section>
+
+        <section class="alarm-config-card">
+          <div class="alarm-card-header">
+            <div class="alarm-icon">
+              <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+            </div>
+            <div class="alarm-card-copy">
+              <p class="section-label">Contact</p>
+              <h2>Contact Number</h2>
+              <p class="status-help">{{ lastContactStatus }}</p>
+            </div>
+          </div>
+
+          <ion-item lines="none" class="input-item">
+            <ion-label position="stacked">Contact Number</ion-label>
+            <ion-input
+              formControlName="contactNumber"
+              type="tel"
+              placeholder="e.g. +639171234567"
+              autocomplete="tel"
+            ></ion-input>
+          </ion-item>
+
+          <ion-button
+            class="submit-button"
+            expand="block"
+            type="button"
+            [disabled]="savingTarget !== null || !canSendCommand"
+            (click)="saveContact()"
+          >
+            <ng-container *ngIf="savingTarget === 'contact'; else saveContactLabel">
+              <ion-spinner name="crescent"></ion-spinner>
+              <span>SAVING...</span>
+            </ng-container>
+            <ng-template #saveContactLabel>
+              <ion-icon slot="start" name="save-outline"></ion-icon>
+              SAVE CONTACT
+            </ng-template>
+          </ion-button>
+        </section>
+      </form>
+    </div>
+  </div>
+
+  <ion-toast
+    [isOpen]="toastOpen"
+    [message]="toastMessage"
+    [color]="toastColor"
+    duration="1800"
+    position="top"
+    (didDismiss)="closeToast()"
+  ></ion-toast>
+</ion-content>

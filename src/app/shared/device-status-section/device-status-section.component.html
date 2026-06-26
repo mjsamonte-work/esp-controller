@@ -1,0 +1,42 @@
+<section class="device-status-section">
+  <div class="status-row" [ngClass]="statusRowClass">
+    <div class="status-copy">
+      <div class="status-title-row">
+        <p class="section-label">{{ statusLabel }}</p>
+        <ion-icon
+          name="information-circle-outline"
+          class="status-info-icon"
+          [id]="tooltipId"
+          aria-label="Learn more about Device Status"
+        ></ion-icon>
+        <ion-popover [trigger]="tooltipId" side="top" alignment="start">
+          <ng-template>
+            <div class="auto-check-popover-content">
+              <p>{{ tooltipContent }}</p>
+            </div>
+          </ng-template>
+        </ion-popover>
+      </div>
+      <p class="status-help">{{ statusDescription }}</p>
+    </div>
+
+    <div class="status-pill" [ngClass]="getStatusClass(deviceHealth$ | async)">
+      {{ getStatusLabel(deviceHealth$ | async) }}
+    </div>
+  </div>
+
+  <ion-button
+    *ngIf="showCheckButton"
+    class="status-check-button"
+    fill="outline"
+    expand="block"
+    [disabled]="(deviceCheckInProgress$ | async) === true"
+    (click)="refresh.emit()"
+  >
+    <ng-container *ngIf="(deviceCheckInProgress$ | async) === true; else checkStatusLabel">
+      <ion-spinner name="crescent"></ion-spinner>
+      <span>CHECKING...</span>
+    </ng-container>
+    <ng-template #checkStatusLabel>CHECK DEVICE STATUS</ng-template>
+  </ion-button>
+</section>

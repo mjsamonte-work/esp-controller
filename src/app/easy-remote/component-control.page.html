@@ -42,32 +42,14 @@
         </div>
       </section>
 
-      <section class="device-status-section equipment-status-section">
-        <div class="status-row component-status-row">
-          <div class="status-copy">
-            <div class="status-title-row">
-              <p class="section-label">Device Status</p>
-              <ion-icon
-                name="information-circle-outline"
-                class="status-info-icon"
-                id="equipment-device-status-tooltip"
-                aria-label="Learn more about Device Status"
-              ></ion-icon>
-              <ion-popover trigger="equipment-device-status-tooltip" side="top" alignment="start">
-                <ng-template>
-                  <div class="auto-check-popover-content">
-                    <p>Device Status tells you if the actual device is connected and responding right now.</p>
-                  </div>
-                </ng-template>
-              </ion-popover>
-            </div>
-            <p class="status-help">Shows if this device is connected and responding right now.</p>
-          </div>
-          <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
-            {{ getDeviceStatusLabel(deviceHealth$ | async) }}
-          </div>
-        </div>
-      </section>
+      <app-device-status-section
+        [deviceHealth$]="deviceHealth$"
+        [deviceCheckInProgress$]="deviceCheckInProgress$"
+        (refresh)="refreshDeviceStatus()"
+        [showCheckButton]="false"
+        statusRowClass="component-status-row"
+        tooltipId="equipment-device-status-tooltip"
+      ></app-device-status-section>
 
       <section class="action-panel">
         <div class="action-panel-header">

@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { discardPeriodicTasks, fakeAsync, ComponentFixture, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
@@ -61,6 +62,7 @@ describe('EasyRemotePage', () => {
 
     await TestBed.configureTestingModule({
       imports: [EasyRemotePage],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         provideRouter([]),
         { provide: MqttService, useValue: mqttService },

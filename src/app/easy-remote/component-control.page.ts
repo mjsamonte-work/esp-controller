@@ -1,8 +1,8 @@
-import { AsyncPipe, NgClass, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { chevronBackOutline, informationCircleOutline } from 'ionicons/icons';
+import { chevronBackOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import {
   IonAlert,
@@ -10,7 +10,6 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
-  IonPopover,
   IonSpinner,
   IonToast,
   IonTitle,
@@ -25,21 +24,20 @@ import {
   MqttConnectionState,
   MqttService,
 } from '../services/mqtt.service';
+import { DeviceStatusSectionComponent } from '../shared/device-status-section/device-status-section.component';
 
 @Component({
   selector: 'app-component-control',
   templateUrl: 'component-control.page.html',
   styleUrls: ['component-control.page.scss'],
   imports: [
-    AsyncPipe,
-    NgClass,
     NgIf,
+    DeviceStatusSectionComponent,
     IonAlert,
     IonButton,
     IonContent,
     IonHeader,
     IonIcon,
-    IonPopover,
     IonSpinner,
     IonToast,
     IonTitle,
@@ -50,6 +48,7 @@ import {
 export class ComponentControlPage implements OnInit, OnDestroy {
   readonly connectionState$ = this.mqttService.state$;
   readonly deviceHealth$ = this.mqttService.deviceHealth$;
+  readonly deviceCheckInProgress$ = this.mqttService.deviceCheckInProgress$;
   readonly componentHealth$ = this.mqttService.componentHealth$;
   readonly equipmentState$ = this.mqttService.equipmentState$;
   readonly toastButtons = [
@@ -99,7 +98,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
   ) {
     addIcons({
       'chevron-back-outline': chevronBackOutline,
-      'information-circle-outline': informationCircleOutline,
     });
   }
 
@@ -287,41 +285,6 @@ export class ComponentControlPage implements OnInit, OnDestroy {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to check component status.';
       this.presentToast(message, 'danger');
-    }
-  }
-
-  getServerStatusLabel(state: string | null): string {
-    return this.isServerConnected(state) ? 'Connected' : 'Disconnected';
-  }
-
-  getServerStatusClass(state: string | null): string {
-    return this.isServerConnected(state) ? 'status-connected' : 'status-disconnected';
-  }
-
-  getDeviceStatusLabel(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'Connected - Online';
-      case 'offline':
-        return 'Offline - Disconnected';
-      case 'checking':
-        return 'Checking...';
-      case 'unknown':
-      default:
-        return 'Offline - Disconnected';
-    }
-  }
-
-  getDeviceStatusClass(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'status-connected';
-      case 'checking':
-        return 'status-pending';
-      case 'unknown':
-      case 'offline':
-      default:
-        return 'status-disconnected';
     }
   }
 

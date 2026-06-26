@@ -1,0 +1,33 @@
+<ion-item lines="none" class="interval-item">
+  <div class="interval-item-head">
+    <div class="interval-title-group">
+      <h2 class="auto-check-title">Auto Check</h2>
+      <ion-icon
+        name="information-circle-outline"
+        class="auto-check-info-icon"
+        [id]="tooltipId"
+        aria-label="Learn more about Auto Check"
+      ></ion-icon>
+    </div>
+    <ion-popover [trigger]="tooltipId" side="top" alignment="end">
+      <ng-template>
+        <div class="auto-check-popover-content">
+          <p>{{ tooltipContent }}</p>
+        </div>
+      </ng-template>
+    </ion-popover>
+    <ion-select
+      interface="popover"
+      justify="end"
+      [value]="value"
+      (ionChange)="onIntervalChange($event)"
+    >
+      <ion-select-option *ngFor="let option of options" [value]="option">
+        {{ option }} seconds
+      </ion-select-option>
+    </ion-select>
+  </div>
+  <ion-label>
+    <p class="status-help">{{ helpText }}</p>
+  </ion-label>
+</ion-item>

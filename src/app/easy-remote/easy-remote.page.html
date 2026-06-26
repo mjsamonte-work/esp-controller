@@ -21,96 +21,25 @@
         <h1>{{ deviceName || deviceCode }}</h1>
       </section>
 
-      <section class="status-card device-details-card">
-        <div class="status-grid">
-          <div class="status-details">
-            <div class="detail-item">
-              <p class="section-label">Code</p>
-              <p class="device-meta">{{ deviceCode }}</p>
-            </div>
-            <div class="detail-item">
-              <p class="section-label">Location</p>
-              <p class="device-meta">{{ deviceLocation }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <app-device-details-card
+        [deviceCode]="deviceCode"
+        [deviceLocation]="deviceLocation"
+      ></app-device-details-card>
 
-      <ion-item lines="none" class="interval-item">
-        <div class="interval-item-head">
-          <div class="interval-title-group">
-            <h2 class="auto-check-title">Auto Check</h2>
-            <ion-icon
-              name="information-circle-outline"
-              class="auto-check-info-icon"
-              id="auto-check-tooltip"
-              aria-label="Learn more about Auto Check"
-            ></ion-icon>
-          </div>
-          <ion-popover trigger="auto-check-tooltip" side="top" alignment="end">
-            <ng-template>
-              <div class="auto-check-popover-content">
-                <p>Auto Check looks at your device from time to time so you can quickly see if it is still online and ready to use.</p>
-              </div>
-            </ng-template>
-          </ion-popover>
-          <ion-select
-            interface="popover"
-            justify="end"
-            [value]="selectedAutoCheckIntervalSeconds"
-            (ionChange)="updateAutoCheckInterval($event)"
-          >
-            <ion-select-option *ngFor="let option of autoCheckIntervalOptions" [value]="option">
-              {{ option }} seconds
-            </ion-select-option>
-          </ion-select>
-        </div>
-        <ion-label>
-          <p class="status-help">Set how often the app should check if this device is still connected.</p>
-        </ion-label>
-      </ion-item>
+      <app-auto-check-interval
+        [value]="selectedAutoCheckIntervalSeconds"
+        [options]="autoCheckIntervalOptions"
+        tooltipId="auto-check-tooltip"
+        tooltipContent="Auto Check looks at your device from time to time so you can quickly see if it is still online and ready to use."
+        helpText="Set how often the app should check if this device is still connected."
+        (valueChange)="updateAutoCheckInterval($event)"
+      ></app-auto-check-interval>
 
-      <section class="device-status-section">
-        <div class="status-row">
-          <div class="status-copy">
-            <div class="status-title-row">
-              <p class="section-label">Device Status</p>
-              <ion-icon
-                name="information-circle-outline"
-                class="status-info-icon"
-                id="device-status-tooltip"
-                aria-label="Learn more about Device Status"
-              ></ion-icon>
-              <ion-popover trigger="device-status-tooltip" side="top" alignment="start">
-                <ng-template>
-                  <div class="auto-check-popover-content">
-                    <p>Device Status tells you if the actual device is connected and responding right now.</p>
-                  </div>
-                </ng-template>
-              </ion-popover>
-            </div>
-            <p class="status-help">Shows if this device is connected and responding right now.</p>
-          </div>
-
-          <div class="status-pill" [ngClass]="getDeviceStatusClass(deviceHealth$ | async)">
-            {{ getDeviceStatusLabel(deviceHealth$ | async) }}
-          </div>
-        </div>
-
-        <ion-button
-          class="status-check-button"
-          fill="outline"
-          expand="block"
-          [disabled]="(deviceCheckInProgress$ | async) === true"
-          (click)="refreshDeviceStatus()"
-        >
-          <ng-container *ngIf="(deviceCheckInProgress$ | async) === true; else checkStatusLabel">
-            <ion-spinner name="crescent"></ion-spinner>
-            <span>CHECKING...</span>
-          </ng-container>
-          <ng-template #checkStatusLabel>CHECK DEVICE STATUS</ng-template>
-        </ion-button>
-      </section>
+      <app-device-status-section
+        [deviceHealth$]="deviceHealth$"
+        [deviceCheckInProgress$]="deviceCheckInProgress$"
+        (refresh)="refreshDeviceStatus()"
+      ></app-device-status-section>
 
       <section class="components-panel">
         <div class="header-summary">

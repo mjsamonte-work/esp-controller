@@ -386,8 +386,7 @@ ion-title {
   --inner-padding-end: 14px;
 }
 
-.alarm-config-group,
-.alarm-config-panel {
+.alarm-config-group {
   display: grid;
   gap: 14px;
 }
@@ -533,50 +532,62 @@ ion-title {
 }
 
 .alarm-stage {
-  gap: 18px;
-}
-
-.alarm-config-card,
-.status-card {
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 28px;
-  box-shadow: 0 20px 40px rgba(44, 71, 120, 0.12);
-}
-
-.status-card {
-  padding: 20px 18px;
+  gap: 22px;
 }
 
 .alarm-config-card {
-  padding: 20px 18px;
+  padding: 18px;
   display: grid;
   gap: 16px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(112, 134, 166, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 10px 24px rgba(48, 64, 96, 0.08);
 }
 
 .alarm-card-header {
   display: grid;
-  grid-template-columns: 48px 1fr;
+  grid-template-columns: 46px minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+.alarm-card-copy {
+  min-width: 0;
 }
 
 .alarm-card-header h2 {
-  margin: 0 0 4px;
+  margin: 0 0 3px;
   color: var(--easy-text);
-  font-size: 1.25rem;
+  font-size: 1.08rem;
+  font-weight: 800;
   line-height: 1.2;
 }
 
 .alarm-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: rgba(13, 87, 184, 0.1);
   color: var(--easy-blue);
   font-size: 1.45rem;
+}
+
+.alarm-config-card .input-item {
+  --border-radius: 16px;
+}
+
+.alarm-config-card ion-text {
+  display: block;
+  margin: -8px 4px 0;
+  font-size: 0.86rem;
+}
+
+.alarm-config-card .submit-button {
+  margin: 0;
 }
 
 .components-list-card {

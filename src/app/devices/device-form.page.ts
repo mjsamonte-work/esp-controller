@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { addIcons } from 'ionicons';
-import { addOutline, chevronBackOutline, qrCodeOutline, saveOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, saveOutline } from 'ionicons/icons';
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
@@ -104,7 +104,6 @@ export class DeviceFormPage implements OnInit {
     addIcons({
       'add-outline': addOutline,
       'chevron-back-outline': chevronBackOutline,
-      'qr-code-outline': qrCodeOutline,
       'save-outline': saveOutline,
     });
   }
@@ -195,14 +194,6 @@ export class DeviceFormPage implements OnInit {
     }
   }
 
-  scanDevice(): void {
-    if (this.isEditMode) {
-      return;
-    }
-
-    void this.router.navigate(['/devices/scan']);
-  }
-
   closeToast(): void {
     this.toastOpen = false;
   }
@@ -212,7 +203,7 @@ export class DeviceFormPage implements OnInit {
   }
 
   get pageHeading(): string {
-    return this.isEditMode ? 'Update device details' : 'Register a device for Easy Remote';
+    return this.isEditMode ? 'Update device details' : 'Add a new device';
   }
 
   get submitLabel(): string {

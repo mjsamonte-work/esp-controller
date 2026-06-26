@@ -1,7 +1,7 @@
-import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { addOutline, chevronBackOutline, chevronForwardOutline, createOutline, cubeOutline, eyeOutline, informationCircleOutline, trashOutline } from 'ionicons/icons';
+import { addOutline, chevronBackOutline, chevronForwardOutline, createOutline, cubeOutline, eyeOutline, trashOutline } from 'ionicons/icons';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
@@ -16,10 +16,6 @@ import {
   IonItemSliding,
   IonLabel,
   IonList,
-  IonPopover,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
   IonToast,
   IonTitle,
   IonToolbar,
@@ -33,16 +29,20 @@ import {
 } from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
 import { DeviceHealthState, MqttConnectionState, MqttService } from '../services/mqtt.service';
+import { DeviceDetailsCardComponent } from '../shared/device-details-card/device-details-card.component';
+import { AutoCheckIntervalComponent } from '../shared/auto-check-interval/auto-check-interval.component';
+import { DeviceStatusSectionComponent } from '../shared/device-status-section/device-status-section.component';
 
 @Component({
   selector: 'app-easy-remote',
   templateUrl: 'easy-remote.page.html',
   styleUrls: ['easy-remote.page.scss'],
   imports: [
-    AsyncPipe,
-    NgClass,
     NgFor,
     NgIf,
+    DeviceDetailsCardComponent,
+    AutoCheckIntervalComponent,
+    DeviceStatusSectionComponent,
     IonAlert,
     IonButton,
     IonContent,
@@ -54,10 +54,6 @@ import { DeviceHealthState, MqttConnectionState, MqttService } from '../services
     IonItemSliding,
     IonLabel,
     IonList,
-    IonPopover,
-    IonSelect,
-    IonSelectOption,
-    IonSpinner,
     IonToast,
     IonTitle,
     IonToolbar,
@@ -127,7 +123,6 @@ export class EasyRemotePage implements OnInit, OnDestroy {
       'create-outline': createOutline,
       'cube-outline': cubeOutline,
       'eye-outline': eyeOutline,
-      'information-circle-outline': informationCircleOutline,
       'trash-outline': trashOutline,
     });
   }
@@ -263,9 +258,7 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     }
   }
 
-  async updateAutoCheckInterval(event: CustomEvent<{ value: number | string | null }>): Promise<void> {
-    const nextValue = Number(event.detail.value) as AutoCheckIntervalSeconds;
-
+  async updateAutoCheckInterval(nextValue: AutoCheckIntervalSeconds): Promise<void> {
     if (!this.device || !AUTO_CHECK_INTERVAL_OPTIONS.includes(nextValue)) {
       return;
     }
@@ -353,43 +346,6 @@ export class EasyRemotePage implements OnInit, OnDestroy {
     }
 
     void this.router.navigate(['/devices', this.device.code, 'components', 'new']);
-  }
-
-  getServerStatusLabel(state: string | null): string {
-    return this.isServerConnected(state) ? 'Connected' : 'Disconnected';
-  }
-
-  getServerStatusClass(state: string | null): string {
-    return this.isServerConnected(state)
-      ? 'status-connected'
-      : 'status-disconnected';
-  }
-
-  getDeviceStatusLabel(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'Connected - Online';
-      case 'offline':
-        return 'Offline - Disconnected';
-      case 'checking':
-        return 'Checking...';
-      case 'unknown':
-      default:
-        return 'Offline - Disconnected';
-    }
-  }
-
-  getDeviceStatusClass(state: DeviceHealthState | null): string {
-    switch (state) {
-      case 'online':
-        return 'status-connected';
-      case 'checking':
-        return 'status-pending';
-      case 'unknown':
-      case 'offline':
-      default:
-        return 'status-disconnected';
-    }
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {

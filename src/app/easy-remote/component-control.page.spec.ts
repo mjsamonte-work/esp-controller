@@ -1,3 +1,4 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
@@ -52,6 +53,7 @@ describe('ComponentControlPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [ComponentControlPage],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
       providers: [
         provideRouter([]),
         { provide: MqttService, useValue: mqttService },
