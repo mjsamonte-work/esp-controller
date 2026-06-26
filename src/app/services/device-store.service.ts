@@ -5,9 +5,12 @@ import { BehaviorSubject } from 'rxjs';
 import {
   AUTO_CHECK_INTERVAL_OPTIONS,
   DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
-  DEFAULT_EASY_SWITCH_COMPONENTS,
+  DEFAULT_EASY_ALARM_COMPONENTS,
+  DEFAULT_EASY_REMOTE_COMPONENTS,
   Device,
   DeviceType,
+  LEGACY_EASY_SWITCH_TYPE,
+  type AlarmConfiguration,
   type DeviceComponent,
 } from '../models/device.model';
 
@@ -22,9 +25,9 @@ const DEFAULT_DEVICES: Device[] = [
     name: 'SMART EASY PH DEVICE',
     code: 'smart-easy-ph-device',
     location: 'Living Room',
-    type: DeviceType.EasySwitch,
+    type: DeviceType.EasyRemote,
     autoCheckIntervalSeconds: DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
-    components: DEFAULT_EASY_SWITCH_COMPONENTS,
+    components: DEFAULT_EASY_REMOTE_COMPONENTS,
   },
 ];
 
@@ -53,16 +56,20 @@ export class DeviceStoreService {
   async addDevice(device: Device): Promise<void> {
     await this.ready();
 
+    const normalizedType = this.normalizeDeviceType(device.type);
     const normalizedDevice = {
       name: device.name.trim(),
       code: device.code.trim(),
       location: device.location.trim(),
-      type: this.normalizeDeviceType(device.type),
+      type: normalizedType,
       hostname: this.normalizeOptionalText(device.hostname),
       model: this.normalizeOptionalText(device.model),
       firmwareVersion: this.normalizeOptionalText(device.firmwareVersion),
       autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
       components: this.normalizeComponentsForType(device.type, device.components),
+      alarmConfiguration: normalizedType === DeviceType.EasyAlarm
+        ? this.normalizeAlarmConfiguration(device.alarmConfiguration)
+        : undefined,
     };
 
     if (!normalizedDevice.name || !normalizedDevice.code || !normalizedDevice.location) {
@@ -80,7 +87,8 @@ export class DeviceStoreService {
 
   async updateDevice(
     code: string,
-    updates: Pick<Device, 'name' | 'location' | 'autoCheckIntervalSeconds'> & Partial<Pick<Device, 'type'>>,
+    updates: Pick<Device, 'name' | 'location' | 'autoCheckIntervalSeconds'> &
+      Partial<Pick<Device, 'type' | 'alarmConfiguration'>>,
   ): Promise<void> {
     await this.ready();
 
@@ -109,6 +117,9 @@ export class DeviceStoreService {
             location: normalizedLocation,
             type: normalizedType,
             components: this.normalizeComponentsForType(normalizedType, device.components),
+            alarmConfiguration: normalizedType === DeviceType.EasyAlarm
+              ? this.normalizeAlarmConfiguration(updates.alarmConfiguration ?? device.alarmConfiguration)
+              : undefined,
             autoCheckIntervalSeconds: normalizedInterval,
           }
         : device,
@@ -291,6 +302,7 @@ export class DeviceStoreService {
             firmwareVersion: this.normalizeOptionalText(device.firmwareVersion),
             autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(device.autoCheckIntervalSeconds),
             components: this.normalizeComponentsForType(device.type, device.components),
+            alarmConfiguration: this.normalizeAlarmConfiguration(device.alarmConfiguration),
           }))
           .filter((device) => device.name.length > 0 && device.code.length > 0 && device.location.length > 0),
       );
@@ -337,7 +349,9 @@ export class DeviceStoreService {
       (typeof candidate.firmwareVersion === 'string' || typeof candidate.firmwareVersion === 'undefined') &&
       (typeof candidate.autoCheckIntervalSeconds === 'number'
         || typeof candidate.autoCheckIntervalSeconds === 'undefined') &&
-      (Array.isArray(candidate.components) || typeof candidate.components === 'undefined')
+      (Array.isArray(candidate.components) || typeof candidate.components === 'undefined') &&
+      (typeof candidate.alarmConfiguration === 'object'
+        || typeof candidate.alarmConfiguration === 'undefined')
     );
   }
 
@@ -347,10 +361,14 @@ export class DeviceStoreService {
       : DEFAULT_AUTO_CHECK_INTERVAL_SECONDS;
   }
 
-  private normalizeDeviceType(value: DeviceType | undefined): DeviceType {
+  private normalizeDeviceType(value: DeviceType | string | undefined): DeviceType {
+    if (value === LEGACY_EASY_SWITCH_TYPE) {
+      return DeviceType.EasyRemote;
+    }
+
     return Object.values(DeviceType).includes(value as DeviceType)
       ? (value as DeviceType)
-      : DeviceType.EasySwitch;
+      : DeviceType.EasyRemote;
   }
 
   private normalizeComponentsForType(
@@ -364,9 +382,31 @@ export class DeviceStoreService {
       return normalizedComponents;
     }
 
-    return normalizedType === DeviceType.EasySwitch
-      ? this.normalizeComponents(DEFAULT_EASY_SWITCH_COMPONENTS)
-      : [];
+    if (normalizedType === DeviceType.EasyRemote) {
+      return this.normalizeComponents(DEFAULT_EASY_REMOTE_COMPONENTS);
+    }
+
+    if (normalizedType === DeviceType.EasyAlarm) {
+      return this.normalizeComponents(DEFAULT_EASY_ALARM_COMPONENTS);
+    }
+
+    return [];
+  }
+
+  private normalizeAlarmConfiguration(value: AlarmConfiguration | undefined): AlarmConfiguration | undefined {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+
+    const emailAddress = this.normalizeOptionalText(value.emailAddress);
+    const contactNumber = this.normalizeOptionalText(value.contactNumber);
+
+    return emailAddress || contactNumber
+      ? {
+          emailAddress,
+          contactNumber,
+        }
+      : undefined;
   }
 
   private normalizeOptionalText(value: string | undefined): string | undefined {
@@ -445,6 +485,7 @@ export class DeviceStoreService {
       firmwareVersion: this.normalizeOptionalText(candidate.firmwareVersion),
       autoCheckIntervalSeconds: this.normalizeAutoCheckInterval(candidate.autoCheckIntervalSeconds),
       components: this.normalizeComponentsForType(candidate.type, candidate.components),
+      alarmConfiguration: this.normalizeAlarmConfiguration(candidate.alarmConfiguration),
     };
   }
 }

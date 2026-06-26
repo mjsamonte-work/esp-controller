@@ -65,6 +65,42 @@
             <ion-text color="danger" *ngIf="hasLocationError">Location is required.</ion-text>
 
             <ion-item lines="none" class="input-item">
+              <ion-label position="stacked">Device Type</ion-label>
+              <ion-select formControlName="type" interface="popover">
+                <ion-select-option [value]="deviceType.EasyRemote">EASY REMOTE</ion-select-option>
+                <ion-select-option [value]="deviceType.EasyAlarm">EASY ALARM</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <div *ngIf="isAlarmType" class="alarm-config-group">
+              <div class="alarm-config-heading">
+                <p class="section-label">Alarm Configuration</p>
+                <p class="status-help">These values can be saved to the ESP32 after setup.</p>
+              </div>
+
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Email Address</ion-label>
+                <ion-input
+                  formControlName="emailAddress"
+                  type="email"
+                  placeholder="e.g. owner@example.com"
+                  autocomplete="email"
+                ></ion-input>
+              </ion-item>
+              <ion-text color="danger" *ngIf="hasEmailError">Enter a valid email address.</ion-text>
+
+              <ion-item lines="none" class="input-item">
+                <ion-label position="stacked">Contact Number</ion-label>
+                <ion-input
+                  formControlName="contactNumber"
+                  type="tel"
+                  placeholder="e.g. +639171234567"
+                  autocomplete="tel"
+                ></ion-input>
+              </ion-item>
+            </div>
+
+            <ion-item lines="none" class="input-item">
               <ion-label position="stacked">Auto Check Interval</ion-label>
               <ion-select formControlName="autoCheckIntervalSeconds" interface="popover">
                 <ion-select-option *ngFor="let option of autoCheckIntervalOptions" [value]="option">

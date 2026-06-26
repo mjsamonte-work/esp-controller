@@ -3,6 +3,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angul
 
 import { DeviceFormPage } from './device-form.page';
 import { DeviceStoreService } from '../services/device-store.service';
+import { DeviceType } from '../models/device.model';
 
 describe('DeviceFormPage', () => {
   let component: DeviceFormPage;
@@ -55,6 +56,9 @@ describe('DeviceFormPage', () => {
       name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
+      type: DeviceType.EasyRemote,
+      emailAddress: '',
+      contactNumber: '',
       autoCheckIntervalSeconds: 120,
     });
 
@@ -64,6 +68,8 @@ describe('DeviceFormPage', () => {
       name: 'Garage Door',
       code: 'esp2',
       location: 'Garage',
+      type: DeviceType.EasyRemote,
+      alarmConfiguration: undefined,
       autoCheckIntervalSeconds: 120,
     });
     expect(router.navigate).toHaveBeenCalledWith(['/devices'], {
@@ -111,6 +117,9 @@ describe('DeviceFormPage', () => {
       name: 'Kitchen Lamp',
       code: 'esp1',
       location: 'Kitchen',
+      type: DeviceType.EasyRemote,
+      emailAddress: '',
+      contactNumber: '',
       autoCheckIntervalSeconds: 60,
     });
     expect(component.deviceForm.controls.code.disabled).toBeTrue();

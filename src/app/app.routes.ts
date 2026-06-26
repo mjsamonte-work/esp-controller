@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./easy-remote/easy-remote.page').then((m) => m.EasyRemotePage),
   },
   {
+    path: 'easy-alarm/:deviceCode',
+    loadComponent: () => import('./easy-alarm/easy-alarm.page').then((m) => m.EasyAlarmPage),
+  },
+  {
     path: 'devices/:deviceCode/components',
     loadComponent: () =>
       import('./devices/device-components.page').then((m) => m.DeviceComponentsPage),

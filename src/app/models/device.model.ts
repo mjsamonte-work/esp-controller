@@ -8,11 +8,14 @@ export interface DeviceComponent {
 }
 
 export enum DeviceType {
-  EasySwitch = 'EASY_SWITCH',
+  EasyRemote = 'EASY_REMOTE',
+  EasyAlarm = 'EASY_ALARM',
   EasyMonitoring = 'EASY_MONITORING',
 }
 
-export const DEFAULT_EASY_SWITCH_COMPONENTS: DeviceComponent[] = [
+export const LEGACY_EASY_SWITCH_TYPE = 'EASY_SWITCH';
+
+export const DEFAULT_EASY_REMOTE_COMPONENTS: DeviceComponent[] = [
   {
     name: 'Equipment 1',
     code: 'equipment-1',
@@ -35,14 +38,31 @@ export const DEFAULT_EASY_SWITCH_COMPONENTS: DeviceComponent[] = [
   },
 ];
 
+export const DEFAULT_EASY_ALARM_COMPONENTS: DeviceComponent[] = [
+  {
+    name: 'Email Address',
+    code: 'email',
+  },
+  {
+    name: 'Contact Number',
+    code: 'contact',
+  },
+];
+
+export interface AlarmConfiguration {
+  emailAddress?: string;
+  contactNumber?: string;
+}
+
 export interface Device {
   name: string;
   code: string;
   location: string;
-  type: DeviceType;
+  type?: DeviceType;
   hostname?: string;
   model?: string;
   firmwareVersion?: string;
   autoCheckIntervalSeconds: AutoCheckIntervalSeconds;
   components?: DeviceComponent[];
+  alarmConfiguration?: AlarmConfiguration;
 }

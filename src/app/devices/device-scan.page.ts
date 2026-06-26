@@ -320,9 +320,16 @@ export class DeviceScanPage implements OnDestroy {
   }
 
   get deviceType(): DeviceType {
-    return this.deviceInfo?.deviceType === DeviceType.EasyMonitoring
-      ? DeviceType.EasyMonitoring
-      : DeviceType.EasySwitch;
+    switch (this.deviceInfo?.deviceType) {
+      case DeviceType.EasyAlarm:
+        return DeviceType.EasyAlarm;
+      case DeviceType.EasyMonitoring:
+        return DeviceType.EasyMonitoring;
+      case DeviceType.EasyRemote:
+      case 'EASY_SWITCH':
+      default:
+        return DeviceType.EasyRemote;
+    }
   }
 
   get canVerifySetupDevice(): boolean {

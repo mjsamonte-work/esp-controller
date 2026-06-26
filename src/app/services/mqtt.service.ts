@@ -21,12 +21,21 @@ export interface MqttLogEntry {
 
 export type DeviceHealthState = 'unknown' | 'checking' | 'online' | 'offline';
 export type EquipmentState = 'unknown' | 'ON' | 'OFF';
+export type AlarmConfigComponent = 'email' | 'contact';
+
+export interface AlarmConfigUpdate {
+  component: AlarmConfigComponent;
+  state: 'UPDATE' | 'UPDATED' | 'ERROR';
+  value?: string;
+  timestamp?: string;
+}
 
 interface DeviceStatusMessage {
   target?: string;
   component?: string;
   deviceCode?: string;
   state?: string;
+  value?: string;
   timestamp?: string;
 }
 
@@ -81,6 +90,7 @@ export class MqttService implements OnDestroy {
   private readonly deviceHealthSubject = new BehaviorSubject<DeviceHealthState>('unknown');
   private readonly componentHealthSubject = new BehaviorSubject<DeviceHealthState>('unknown');
   private readonly equipmentStateSubject = new BehaviorSubject<EquipmentState>('unknown');
+  private readonly alarmConfigUpdateSubject = new BehaviorSubject<AlarmConfigUpdate | null>(null);
   private readonly deviceLastSeenSubject = new BehaviorSubject<string | null>(null);
   private readonly componentLastSeenSubject = new BehaviorSubject<string | null>(null);
   private readonly deviceCheckInProgressSubject = new BehaviorSubject<boolean>(false);
@@ -104,6 +114,7 @@ export class MqttService implements OnDestroy {
   readonly deviceHealth$ = this.deviceHealthSubject.asObservable();
   readonly componentHealth$ = this.componentHealthSubject.asObservable();
   readonly equipmentState$ = this.equipmentStateSubject.asObservable();
+  readonly alarmConfigUpdate$ = this.alarmConfigUpdateSubject.asObservable();
   readonly deviceLastSeen$ = this.deviceLastSeenSubject.asObservable();
   readonly componentLastSeen$ = this.componentLastSeenSubject.asObservable();
   readonly deviceCheckInProgress$ = this.deviceCheckInProgressSubject.asObservable();
@@ -142,6 +153,7 @@ export class MqttService implements OnDestroy {
     this.deviceHealthSubject.next('unknown');
     this.componentHealthSubject.next('unknown');
     this.equipmentStateSubject.next('unknown');
+    this.alarmConfigUpdateSubject.next(null);
     this.deviceLastSeenSubject.next(null);
     this.componentLastSeenSubject.next(null);
     this.deviceCheckInProgressSubject.next(false);
@@ -308,6 +320,71 @@ export class MqttService implements OnDestroy {
         this.addLog({
           direction: 'sent',
           message: `${state} command sent for component`,
+          payload,
+          topic: commandTopic,
+        });
+        resolve();
+      });
+    });
+  }
+
+  publishComponentValue(
+    deviceCode: string,
+    componentCode: AlarmConfigComponent,
+    value: string,
+  ): Promise<void> {
+    if (!this.client) {
+      this.stateSubject.next('error');
+      this.addLog({
+        direction: 'error',
+        message: `Cannot publish update for ${componentCode}`,
+        payload: 'MQTT client is unavailable',
+        topic: this.resolveTopics(deviceCode).commandTopic,
+      });
+      return Promise.reject(new Error('MQTT client is unavailable'));
+    }
+
+    const normalizedDeviceCode = deviceCode.trim();
+    const normalizedComponentCode = componentCode.trim() as AlarmConfigComponent;
+    const normalizedValue = value.trim();
+
+    if (!normalizedDeviceCode) {
+      return Promise.reject(new Error('Device code is required.'));
+    }
+
+    if (!normalizedValue) {
+      return Promise.reject(new Error('Configuration value is required.'));
+    }
+
+    this.setActiveComponent(normalizedDeviceCode, normalizedComponentCode);
+
+    const { commandTopic } = this.resolveTopics(normalizedDeviceCode);
+    const payload = JSON.stringify({
+      target: 'component',
+      component: normalizedComponentCode,
+      state: 'UPDATE',
+      value: normalizedValue,
+      timestamp: new Date().toISOString(),
+    });
+    this.logOutgoingPublish(`Publishing update for ${normalizedComponentCode}`, commandTopic, payload);
+
+    return new Promise<void>((resolve, reject) => {
+      this.client?.publish(commandTopic, payload, { qos: 0 }, (error?: Error) => {
+        if (error) {
+          this.stateSubject.next('error');
+          this.addLog({
+            direction: 'error',
+            message: `Failed to publish update for ${normalizedComponentCode}`,
+            payload: error.message,
+            topic: commandTopic,
+          });
+          reject(error);
+          return;
+        }
+
+        this.addLog({
+          direction: 'sent',
+          message: `Update sent for ${normalizedComponentCode}`,
           payload,
           topic: commandTopic,
         });
@@ -749,6 +826,32 @@ export class MqttService implements OnDestroy {
     }
 
     if (
+      isActiveComponentMessage &&
+      (parsedMessage.component === 'email' || parsedMessage.component === 'contact') &&
+      (normalizedState === 'UPDATED' || normalizedState === 'ERROR')
+    ) {
+      this.clearComponentCheckTimeout();
+      this.pendingComponentHealthCheck = false;
+      this.lastComponentCheckRequestedAt = null;
+      this.componentHealthSubject.next(normalizedState === 'UPDATED' ? 'online' : 'offline');
+      this.componentCheckInProgressSubject.next(false);
+      this.componentLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+      this.deviceHealthSubject.next('online');
+      this.clearDeviceCheckTimeout();
+      this.pendingHealthCheck = false;
+      this.lastDeviceCheckRequestedAt = null;
+      this.deviceCheckInProgressSubject.next(false);
+      this.deviceLastSeenSubject.next(parsedMessage.timestamp ?? new Date().toISOString());
+      this.alarmConfigUpdateSubject.next({
+        component: parsedMessage.component,
+        state: normalizedState,
+        value: parsedMessage.value,
+        timestamp: parsedMessage.timestamp,
+      });
+      return;
+    }
+
+    if (
       normalizedTarget !== 'component' &&
       (normalizedTarget === 'device' ||
         normalizedState === 'ONLINE' ||
@@ -780,6 +883,7 @@ export class MqttService implements OnDestroy {
         component: typeof message.component === 'string' ? message.component : undefined,
         deviceCode: typeof message.deviceCode === 'string' ? message.deviceCode : undefined,
         state: typeof message.state === 'string' ? message.state : undefined,
+        value: typeof message.value === 'string' ? message.value : undefined,
         timestamp: typeof message.timestamp === 'string' ? message.timestamp : undefined,
       };
     } catch {
@@ -791,8 +895,16 @@ export class MqttService implements OnDestroy {
     const normalizedState = message.state?.trim().toUpperCase();
     const normalizedTarget = message.target?.trim().toLowerCase();
 
-    if (!normalizedState || !['ONLINE', 'ON', 'OFF'].includes(normalizedState)) {
+    if (!normalizedState || !['ONLINE', 'ON', 'OFF', 'UPDATED', 'ERROR'].includes(normalizedState)) {
       return false;
+    }
+
+    if (
+      normalizedTarget === 'component' &&
+      (message.component === 'email' || message.component === 'contact') &&
+      (normalizedState === 'UPDATED' || normalizedState === 'ERROR')
+    ) {
+      return true;
     }
 
     if (normalizedTarget === 'component' && (normalizedState === 'ON' || normalizedState === 'OFF')) {

@@ -31,7 +31,7 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 
-import { Device } from '../models/device.model';
+import { Device, DeviceType } from '../models/device.model';
 import { DeviceStoreService } from '../services/device-store.service';
 
 @Component({
@@ -139,7 +139,8 @@ export class DevicesPage implements OnInit {
   }
 
   openDevice(device: Device): void {
-    void this.router.navigate(['/easy-remote', device.code]);
+    const route = device.type === DeviceType.EasyAlarm ? '/easy-alarm' : '/easy-remote';
+    void this.router.navigate([route, device.code]);
   }
 
   editDevice(device: Device, event: Event): void {

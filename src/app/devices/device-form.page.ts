@@ -58,6 +58,7 @@ import { DeviceStoreService } from '../services/device-store.service';
 })
 export class DeviceFormPage implements OnInit {
   readonly autoCheckIntervalOptions = AUTO_CHECK_INTERVAL_OPTIONS;
+  readonly deviceType = DeviceType;
   readonly deviceForm = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
@@ -71,9 +72,16 @@ export class DeviceFormPage implements OnInit {
       nonNullable: true,
       validators: [Validators.required],
     }),
-    type: new FormControl<DeviceType>(DeviceType.EasySwitch, {
+    type: new FormControl<DeviceType>(DeviceType.EasyRemote, {
       nonNullable: true,
       validators: [Validators.required],
+    }),
+    emailAddress: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.email],
+    }),
+    contactNumber: new FormControl('', {
+      nonNullable: true,
     }),
     autoCheckIntervalSeconds: new FormControl<AutoCheckIntervalSeconds>(
       DEFAULT_AUTO_CHECK_INTERVAL_SECONDS,
@@ -126,7 +134,9 @@ export class DeviceFormPage implements OnInit {
       name: device.name,
       code: device.code,
       location: device.location,
-      type: device.type,
+      type: device.type ?? DeviceType.EasyRemote,
+      emailAddress: device.alarmConfiguration?.emailAddress ?? '',
+      contactNumber: device.alarmConfiguration?.contactNumber ?? '',
       autoCheckIntervalSeconds: device.autoCheckIntervalSeconds,
     });
     this.deviceForm.controls.code.disable();
@@ -135,11 +145,24 @@ export class DeviceFormPage implements OnInit {
   async saveDevice(): Promise<void> {
     if (this.deviceForm.invalid) {
       this.deviceForm.markAllAsTouched();
-      this.presentToast('Please enter both device code and location.', 'danger');
+      this.presentToast('Please complete the required device details.', 'danger');
+      return;
+    }
+
+    if (this.isAlarmType && !this.hasAlarmConfiguration) {
+      this.deviceForm.controls.emailAddress.markAsTouched();
+      this.deviceForm.controls.contactNumber.markAsTouched();
+      this.presentToast('Enter an email address or contact number for Easy Alarm.', 'danger');
       return;
     }
 
     const rawValue = this.deviceForm.getRawValue();
+    const alarmConfiguration = rawValue.type === DeviceType.EasyAlarm
+      ? {
+          emailAddress: rawValue.emailAddress.trim() || undefined,
+          contactNumber: rawValue.contactNumber.trim() || undefined,
+        }
+      : undefined;
 
     try {
       if (this.isEditMode) {
@@ -147,10 +170,18 @@ export class DeviceFormPage implements OnInit {
           name: rawValue.name,
           location: rawValue.location,
           type: rawValue.type,
+          alarmConfiguration,
           autoCheckIntervalSeconds: rawValue.autoCheckIntervalSeconds,
         });
       } else {
-        await this.deviceStore.addDevice(rawValue);
+        await this.deviceStore.addDevice({
+          name: rawValue.name,
+          code: rawValue.code,
+          location: rawValue.location,
+          type: rawValue.type,
+          alarmConfiguration,
+          autoCheckIntervalSeconds: rawValue.autoCheckIntervalSeconds,
+        });
       }
 
       await this.router.navigate(['/devices'], {
@@ -201,6 +232,20 @@ export class DeviceFormPage implements OnInit {
   get hasLocationError(): boolean {
     const control = this.deviceForm.controls.location;
     return control.invalid && (control.dirty || control.touched);
+  }
+
+  get hasEmailError(): boolean {
+    const control = this.deviceForm.controls.emailAddress;
+    return control.invalid && (control.dirty || control.touched);
+  }
+
+  get isAlarmType(): boolean {
+    return this.deviceForm.controls.type.value === DeviceType.EasyAlarm;
+  }
+
+  get hasAlarmConfiguration(): boolean {
+    const rawValue = this.deviceForm.getRawValue();
+    return rawValue.emailAddress.trim().length > 0 || rawValue.contactNumber.trim().length > 0;
   }
 
   private presentToast(message: string, color: 'success' | 'danger'): void {
