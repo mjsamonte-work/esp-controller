@@ -60,7 +60,7 @@ import { DeviceStoreService } from '../services/device-store.service';
   ],
 })
 export class DevicesPage implements OnInit {
-  showAddDeviceAction = true;
+  showAddDeviceAction = false;
   showScanDeviceAction = true;
   showImportDeviceAction = false;
   showEditDeviceAction = true;
